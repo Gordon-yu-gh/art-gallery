@@ -141,25 +141,6 @@
       "wechatLink": ""
     },
     {
-      "id": 8,
-      "title": "花事",
-      "artist": "方晴",
-      "description": "工笔花卉，细致勾勒出花朵盛放的姿态，色彩淡雅而富有生命力。",
-      "price": 2800,
-      "style": "水彩",
-      "tags": [
-        "静物"
-      ],
-      "year": 2024,
-      "size": "35×50cm",
-      "material": "纸本设色",
-      "thumbnail": "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400&h=400&fit=crop",
-      "images": [
-        "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200&fit=crop"
-      ],
-      "wechatLink": ""
-    },
-    {
       "id": 9,
       "title": "夜的钢琴曲",
       "artist": "王若",
