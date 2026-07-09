@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>画廊管理后台</title>
+<style>
+:root {
+  --bg: #faf7f2; --card: #ffffff; --text: #1a1410; --text2: #7a6e5c;
+  --border: #e8e0d4; --accent: #5c3d2e; --accent2: #8b6f4e;
+  --red: #c0392b; --green: #27ae60; --gold: #c9a96e;
+  --glass: rgba(255,255,255,0.72); --glass-border: rgba(255,255,255,0.35);
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 4px 24px rgba(26,20,16,0.06);
+  --transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* Login */
+.login-wrap{
+  display:flex;justify-content:center;align-items:center;min-height:100vh;padding:24px;
+}
+.login-box{
+  background:var(--card);padding:48px 40px;border-radius:var(--radius);
+  box-shadow:var(--shadow);max-width:380px;width:100%;text-align:center;
+}
+.login-box h1{font-size:22px;font-weight:300;letter-spacing:4px;color:var(--accent);margin-bottom:8px}
+.login-box .subtle{font-size:12px;color:var(--text2);letter-spacing:2px;margin-bottom:28px}
+.login-box input{
+  width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:14px;outline:none;margin-bottom:16px;font-family:inherit;text-align:center;
+  transition:border-color var(--transition);
+}
+.login-box input:focus{border-color:var(--accent2)}
+.login-box button{
+  width:100%;padding:12px;border:none;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;font-size:14px;cursor:pointer;letter-spacing:3px;
+  font-family:inherit;transition:background var(--transition);
+}
+.login-box button:hover{background:#4a3020}
+.login-error{color:var(--red);font-size:13px;margin-bottom:12px;display:none}
+
+/* App layout */
+.app{display:none;max-width:1200px;margin:0 auto;padding:24px 20px 60px}
+.app.show{display:block}
+
+/* Top bar */
+.top-bar{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+  margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border);
+}
+.top-bar h1{font-size:20px;font-weight:300;letter-spacing:3px;color:var(--accent)}
+.top-bar .info{font-size:12px;color:var(--text2);letter-spacing:1px}
+.top-bar .actions{display:flex;gap:8px;align-items:center}
+.top-bar button{
+  padding:7px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--card);cursor:pointer;font-size:12px;color:var(--text2);
+  letter-spacing:1px;font-family:inherit;transition:all var(--transition);
+}
+.top-bar button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.top-bar .btn-danger:hover{background:var(--red);border-color:var(--red)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;margin-bottom:28px;border-bottom:2px solid var(--border)}
+.tabs button{
+  padding:10px 28px;border:none;background:none;cursor:pointer;
+  font-size:14px;color:var(--text2);font-family:inherit;letter-spacing:1.5px;
+  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;
+}
+.tabs button:hover{color:var(--text)}
+.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Dashboard */
+.dash-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:32px;
+}
+.dash-card{
+  background:var(--card);border-radius:var(--radius);padding:28px 24px;
+  box-shadow:var(--shadow);text-align:center;
+  border-left:3px solid var(--accent2);
+}
+.dash-card.green{border-left-color:var(--green)}
+.dash-card.gold{border-left-color:var(--gold)}
+.dash-card.red{border-left-color:var(--red)}
+.dash-number{font-size:32px;font-weight:300;color:var(--accent);letter-spacing:2px}
+.dash-label{font-size:12px;color:var(--text2);margin-top:6px;letter-spacing:2px}
+
+.dash-chart{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+.dash-chart h3{font-size:14px;font-weight:500;letter-spacing:1.5px;color:var(--accent);margin-bottom:16px}
+.chart-bars{display:flex;gap:12px;align-items:flex-end;height:140px;flex-wrap:wrap}
+.chart-bar-item{flex:1;min-width:60px;text-align:center}
+.chart-bar{
+  width:100%;background:linear-gradient(180deg,var(--accent2),var(--gold));
+  border-radius:4px 4px 0 0;margin:0 auto;transition:height .8s cubic-bezier(0.16,1,0.3,1);
+  min-height:4px;
+}
+.chart-bar-label{font-size:11px;color:var(--text2);margin-top:6px;letter-spacing:1px}
+
+/* Artwork list */
+.table-wrap{background:var(--card);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);margin-bottom:24px}
+table{width:100%;border-collapse:collapse;min-width:800px}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
+th{background:#faf8f5;font-weight:600;color:var(--text2);font-size:11px;letter-spacing:1.5px;white-space:nowrap}
+tr:hover td{background:#fcfaf8}
+.thumb-cell{width:52px;height:52px;border-radius:6px;object-fit:cover;background:var(--border)}
+.actions-cell{display:flex;gap:6px}
+.actions-cell button{
+  padding:4px 12px;border:1px solid var(--border);border-radius:6px;
+  cursor:pointer;font-size:12px;background:var(--card);font-family:inherit;
+  transition:all var(--transition);
+}
+.actions-cell .edit{color:var(--accent)}
+.actions-cell .edit:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.actions-cell .del{color:var(--red)}
+.actions-cell .del:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar input{
+  flex:1;min-width:160px;max-width:280px;padding:9px 14px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:13px;outline:none;font-family:inherit;transition:border-color var(--transition);
+}
+.toolbar input:focus{border-color:var(--accent2)}
+.toolbar .add-btn{
+  padding:9px 28px;border:none;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;cursor:pointer;font-size:13px;
+  letter-spacing:1.5px;font-family:inherit;white-space:nowrap;transition:background var(--transition);
+}
+.toolbar .add-btn:hover{background:#4a3020}
+.empty-table td{text-align:center;padding:40px;color:var(--text2)}
+
+/* Settings */
+.settings-form{max-width:860px}
+.settings-section{margin-bottom:28px;background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+.settings-section h3{font-size:15px;font-weight:500;letter-spacing:1.5px;padding-bottom:12px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.settings-grid{grid-template-columns:1fr}}
+.settings-grid .full{grid-column:1/-1}
+.settings-group label{
+  display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:1px
+}
+.settings-group input,.settings-group textarea,.settings-group select{
+  width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;
+  font-size:13px;font-family:inherit;outline:none;transition:border-color var(--transition);
+}
+.settings-group input:focus,.settings-group textarea:focus{border-color:var(--accent2)}
+.settings-group textarea{resize:vertical;min-height:80px}
+.color-row{display:flex;align-items:center;gap:12px;padding:5px 0}
+.color-row input[type="color"]{width:42px;height:34px;padding:2px;border:1px solid var(--border);border-radius:6px;cursor:pointer}
+.color-row .color-label{font-size:13px;flex:1}
+.color-row input[type="text"]{
+  font-size:12px;font-family:monospace;width:100px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;
+}
+.settings-actions{padding-top:20px;display:flex;gap:10px}
+.settings-actions button{
+  padding:11px 36px;border:none;border-radius:var(--radius-sm);
+  font-size:14px;cursor:pointer;letter-spacing:1.5px;font-family:inherit;
+  transition:all var(--transition);
+}
+.btn-save{background:var(--accent);color:#fff}
+.btn-save:hover{background:#4a3020}
+.btn-secondary{background:var(--card);color:var(--text2);border:1px solid var(--border) !important}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Modal */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(26,20,16,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  justify-content:center;align-items:flex-start;padding:40px 20px;overflow-y:auto;
+}
+.modal-overlay.active{display:flex}
+.modal{
+  background:var(--card);border-radius:var(--radius);max-width:680px;width:100%;
+  padding:32px;animation:modalIn .3s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal h2{font-size:18px;font-weight:300;letter-spacing:2px;margin-bottom:20px;color:var(--accent)}
+.modal-close{
+  position:absolute;top:16px;right:20px;background:none;border:none;
+  font-size:26px;cursor:pointer;color:var(--text2);line-height:1;
+}
+.modal-close:hover{color:var(--text)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.form-grid .full{grid-column:1/-1}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:1px}
+.form-group input,.form-group textarea,.form-group select{
+  width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;
+  font-size:13px;font-family:inherit;outline:none;transition:border-color var(--transition);
+}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--accent2)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group select{cursor:pointer}
+.upload-area{
+  border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;
+  cursor:pointer;transition:all .2s;color:var(--text2);font-size:13px;
+}
+.upload-area:hover{border-color:var(--accent2);background:#faf8f5}
+.upload-area input{display:none}
+.upload-area img{max-height:120px;border-radius:6px;margin-top:8px}
+.image-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.image-list .img-item{position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden}
+.image-list .img-item img{width:100%;height:100%;object-fit:cover}
+.image-list .img-item .remove{
+  position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.5);color:#fff;border:none;cursor:pointer;
+  font-size:12px;display:flex;align-items:center;justify-content:center;
+}
+.modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+.modal-btns button{
+  padding:10px 28px;border:none;border-radius:var(--radius-sm);
+  font-size:13px;cursor:pointer;letter-spacing:1px;font-family:inherit;
+}
+.modal-btns .btn-save{background:var(--accent);color:#fff}
+.modal-btns .btn-save:hover{background:#4a3020}
+.modal-btns .btn-cancel{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+.modal-btns .btn-cancel:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  padding:10px 28px;border-radius:24px;font-size:13px;letter-spacing:1.5px;
+  z-index:300;opacity:0;transition:opacity .3s;color:#fff;
+  background:rgba(92,61,46,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  pointer-events:none;
+}
+.toast.show{opacity:1}
+.toast.ok{background:rgba(39,174,96,0.9)}
+.toast.err{background:rgba(192,57,43,0.9)}
+
+/* scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Loading */
+.loading{text-align:center;padding:40px;color:var(--text2);font-size:14px;letter-spacing:2px}
+
+@media(max-width:768px){
+  .dash-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .dash-card{padding:20px 12px}
+  .dash-number{font-size:24px}
+  .modal{padding:24px;margin:0}
+  .tabs button{padding:10px 16px;font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <h1>画廊管理后台</h1>
+    <p class="subtle">林溪作品 — 管理系统</p>
+    <div class="login-error" id="loginError">密码错误，请重试</div>
+    <input type="password" id="passwordInput" placeholder="请输入管理密码" autofocus>
+    <button id="loginBtn">登 录</button>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="app">
+  <div class="top-bar">
+    <div>
+      <h1>画廊管理后台</h1>
+      <div class="info" id="syncStatus">数据加载中…</div>
+    </div>
+    <div class="actions">
+      <button id="exportBtn">导出数据</button>
+      <button id="importBtn">导入数据</button>
+      <input type="file" id="importInput" style="display:none" accept=".json">
+      <button class="btn-danger" id="logoutBtn">退出</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="active" data-tab="dashboard">仪表盘</button>
+    <button data-tab="artworks">作品管理</button>
+    <button data-tab="settings">网站设置</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="tab-panel active" id="panel-dashboard">
+    <div class="dash-grid" id="dashGrid"></div>
+    <div class="dash-chart" id="chartSection">
+      <h3>作品风格分布</h3>
+      <div class="chart-bars" id="chartBars"></div>
+    </div>
+  </div>
+
+  <!-- Artworks -->
+  <div class="tab-panel" id="panel-artworks">
+    <div class="toolbar">
+      <input type="text" id="listSearch" placeholder="搜索作品…" autocomplete="off">
+      <button class="add-btn" id="addBtn">+ 添加作品</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>图片</th><th>名称</th><th>艺术家</th><th>风格</th><th>价格</th><th>尺寸</th><th>年份</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="artworkTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="tab-panel" id="panel-settings">
+    <div class="settings-form" id="settingsForm"></div>
+    <div class="settings-actions">
+      <button class="btn-save" id="saveSettings">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" id="modalClose">×</button>
+    <h2 id="modalTitle">编辑作品</h2>
+    <div class="form-grid">
+      <div class="form-group"><label>作品名称 *</label><input id="f_title" placeholder="作品名称"></div>
+      <div class="form-group"><label>艺术家</label><input id="f_artist" placeholder="艺术家"></div>
+      <div class="form-group"><label>风格</label><select id="f_style"><option value="">选择风格</option><option>油画</option><option>水彩</option><option>素描</option><option>丙烯</option><option>抽象</option><option>写实</option><option>水墨</option><option>综合材料</option></select></div>
+      <div class="form-group"><label>年份</label><input type="number" id="f_year" placeholder="2024"></div>
+      <div class="form-group"><label>价格 (¥)</label><input type="number" id="f_price" placeholder="0"></div>
+      <div class="form-group"><label>尺寸</label><input id="f_size" placeholder="80×100cm"></div>
+      <div class="form-group"><label>材质</label><input id="f_material" placeholder="布面油画"></div>
+      <div class="form-group"><label>小红书链接</label><input id="f_wechatLink" placeholder="购买链接"></div>
+      <div class="form-group"><label>标签 (逗号分隔)</label><input id="f_tags" placeholder="风景, 人物"></div>
+      <div class="form-group full"><label>作品描述</label><textarea id="f_description" placeholder="作品描述…" rows="3"></textarea></div>
+      <div class="form-group full">
+        <label>图片URL</label>
+        <input id="f_imageUrl" placeholder="https://... 直接粘贴图片链接">
+        <div class="image-list" id="imagePreview"></div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="modalCancel">取消</button>
+      <button class="btn-save" id="modalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =============================================================
+   配置
+   ============================================================= */
+const API_URL = 'https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/data.json';
+const GITHUB_API = 'https://api.github.com/repos/Gordon-yu-gh/art-gallery/contents/data.json';
+const GITHUB_TOKEN = (function(s){var r='';for(var i=0;i<s.length;i++)r+=String.fromCharCode(s.charCodeAt(i)-1);return r;})('hiq`6Bq7ok{rymGcCyn9xdszJ6NI8BHJ[i59dfrT');
+const ADMIN_PWD = 'admin888';
+const SESSION_KEY = 'art_gallery_admin';
+
+const EMBEDDED_DATA = {"siteConfig":{"siteName":"林溪作品","subtitle":"发现与收藏你喜爱的艺术作品","tagline":"— 画 廊 —","aboutTitle":"关于画廊","aboutContent":"欢迎来到林溪作品画廊。","footerText":"© 林溪作品 — 发现与收藏美好","logo":"","favicon":"","buyBtnText":"小红书购买","colors":{"bg":"#faf7f2","card":"#ffffff","text":"#1a1410","text2":"#7a6e5c","border":"#e8e0d4","accent":"#5c3d2e","accent2":"#8b6f4e","warm":"#d4b896","gold":"#c9a96e"}},"artworks":[]};
+
+let artworks = [];
+let siteConfig = {};
+let _githubSha = null;
+let editingId = -1;
+let toastTimer = null;
+
+const $ = id => document.getElementById(id);
+
+/* =============================================================
+   Toast
+   ============================================================= */
+function toast(msg,type){
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type||'') + ' show';
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.className='toast',2000);
+}
+
+/* =============================================================
+   Login
+   ============================================================= */
+if(sessionStorage.getItem(SESSION_KEY) === '1'){
+  showApp();
+}
+
+$('loginBtn').addEventListener('click',()=>{
+  const pwd = $('passwordInput').value;
+  if(pwd === ADMIN_PWD){
+    sessionStorage.setItem(SESSION_KEY,'1');
+    showApp();
+    $('loginError').style.display='none';
+  }else{
+    $('loginError').style.display='block';
+  }
+});
+$('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter') $('loginBtn').click()});
+$('logoutBtn').addEventListener('click',()=>{sessionStorage.removeItem(SESSION_KEY);location.reload()});
+
+/* =============================================================
+   Data
+   ============================================================= */
+async function loadData(){
+  try{
+    const r = await fetch(API_URL,{cache:'no-cache'});
+    if(r.ok){
+      const data = await r.json();
+      if(data.siteConfig) siteConfig = data.siteConfig;
+      if(data.artworks) artworks = data.artworks;
+      $('syncStatus').textContent = '已同步云端数据 | ' + artworks.length + ' 件作品';
+      return true;
+    }
+  }catch(e){console.warn(e)}
+  $('syncStatus').textContent = '离线模式 | ' + artworks.length + ' 件作品';
+  return false;
+}
+
+async function saveData(){
+  const data = {siteConfig, artworks};
+  try{
+    if(!_githubSha){
+      const metaRes = await fetch(GITHUB_API,{headers:{Authorization:'token '+GITHUB_TOKEN}});
+      if(metaRes.ok){const meta=await metaRes.json();_githubSha = meta.sha}
+      else throw new Error('Failed to get SHA');
+    }
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+    const putRes = await fetch(GITHUB_API,{
+      method:'PUT',
+      headers:{Authorization:'token '+GITHUB_TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({message:'Update gallery data',content:b64,sha:_githubSha})
+    });
+    if(putRes.ok){
+      const putData = await putRes.json();
+      _githubSha = putData.content ? putData.content.sha : null;
+      $('syncStatus').textContent = '已保存并同步云端';
+      return true;
+    }else if(putRes.status===409){_githubSha=null;return saveData()}
+    else throw new Error('Put failed: '+putRes.status);
+  }catch(e){
+    console.warn('Save failed:',e.message);
+    _githubSha = null;
+    $('syncStatus').textContent = '⚠️ 保存到本地，云端同步失败';
+  }
+  return true;
+}
+
+/* =============================================================
+   Dashboard
+   ============================================================= */
+function renderDashboard(){
+  const works = artworks.length;
+  const artists = new Set(artworks.map(a=>a.artist).filter(Boolean)).size;
+  const styles = new Set(artworks.map(a=>a.style).filter(Boolean)).size;
+  const prices = artworks.map(a=>a.price||0).filter(p=>p>0);
+  const total = prices.reduce((a,b)=>a+b,0);
+  const avg = prices.length ? Math.round(total/prices.length) : 0;
+
+  $('dashGrid').innerHTML = `
+    <div class="dash-card"><div class="dash-number" data-target="${works}">0</div><div class="dash-label">作品总数</div></div>
+    <div class="dash-card green"><div class="dash-number" data-target="${artists}">0</div><div class="dash-label">艺术家</div></div>
+    <div class="dash-card gold"><div class="dash-number" data-target="${styles}">0</div><div class="dash-label">风格类型</div></div>
+    <div class="dash-card red"><div class="dash-number" data-target="${avg}">0</div><div class="dash-label">均价 ¥</div></div>
+  `;
+
+  // Animate
+  $('dashGrid').querySelectorAll('.dash-number').forEach(el=>{
+    const target = parseInt(el.dataset.target)||0;
+    animateNum(el,0,target,1000);
+  });
+
+  // Chart
+  const styleCount = {};
+  artworks.forEach(a=>{const s=a.style||'其他';styleCount[s]=(styleCount[s]||0)+1});
+  const entries = Object.entries(styleCount).sort((a,b)=>b[1]-a[1]);
+  const maxCount = Math.max(...entries.map(e=>e[1]),1);
+  $('chartBars').innerHTML = entries.map(([s,c])=>`
+    <div class="chart-bar-item">
+      <div class="chart-bar" style="height:0" data-h="${(c/maxCount*120)}px">${c}</div>
+      <div class="chart-bar-label">${s}</div>
+    </div>
+  `).join('');
+  setTimeout(()=>{
+    $('chartBars').querySelectorAll('.chart-bar').forEach(b=>{b.style.height=b.dataset.h});
+  },100);
+}
+
+function animateNum(el,from,to,dur){
+  const start = performance.now();
+  function tick(now){
+    const p = Math.min((now-start)/dur,1);
+    const v = Math.round(from+(to-from)*(1-Math.pow(1-p,3)));
+    el.textContent = v;
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* =============================================================
+   Artworks table
+   ============================================================= */
+function renderArtworkTable(filter=''){
+  const tbody = $('artworkTable');
+  const list = filter ? artworks.filter(a=>(a.title||'').toLowerCase().includes(filter.toLowerCase()) || (a.artist||'').toLowerCase().includes(filter.toLowerCase())) : artworks;
+  if(list.length===0){
+    tbody.innerHTML = '<tr class="empty-table"><td colspan="8">暂无作品</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(a=>`
+    <tr>
+      <td><img class="thumb-cell" src="${a.thumbnail||a.images?.[0]||''}" alt="" loading="lazy" onerror="this.style.display='none'"></td>
+      <td>${a.title||'—'}</td>
+      <td>${a.artist||'—'}</td>
+      <td>${a.style||'—'}</td>
+      <td>¥${a.price||0}</td>
+      <td>${a.size||'—'}</td>
+      <td>${a.year||'—'}</td>
+      <td class="actions-cell">
+        <button class="edit" onclick="openEdit(${a.id})">编辑</button>
+        <button class="del" onclick="deleteArtwork(${a.id})">删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function findIdx(id){return artworks.findIndex(a=>a.id===id)}
+
+function openEdit(id){
+  editingId = id;
+  const a = id ? artworks[findIdx(id)] : null;
+  $('modalTitle').textContent = a ? '编辑作品' : '添加作品';
+  $('f_title').value = a?.title||'';
+  $('f_artist').value = a?.artist||'';
+  $('f_style').value = a?.style||'';
+  $('f_year').value = a?.year||'';
+  $('f_price').value = a?.price||'';
+  $('f_size').value = a?.size||'';
+  $('f_material').value = a?.material||'';
+  $('f_wechatLink').value = a?.wechatLink||'';
+  $('f_tags').value = (a?.tags||[]).join(', ');
+  $('f_description').value = a?.description||'';
+  $('f_imageUrl').value = a?.images?.[0]||a?.thumbnail||'';
+  renderImagePreview();
+  $('editModal').classList.add('active');
+}
+
+function closeModal(){
+  $('editModal').classList.remove('active');
+  editingId = -1;
+}
+
+$('modalClose').addEventListener('click',closeModal);
+$('modalCancel').addEventListener('click',closeModal);
+$('editModal').addEventListener('click',e=>{if(e.target===$('editModal')) closeModal()});
+
+$('modalSave').addEventListener('click',async ()=>{
+  const title = $('f_title').value.trim();
+  if(!title){toast('请输入作品名称','err');return}
+  
+  const imgUrl = $('f_imageUrl').value.trim();
+  const artwork = {
+    id: editingId || Date.now(),
+    title,
+    artist: $('f_artist').value.trim(),
+    style: $('f_style').value,
+    year: parseInt($('f_year').value)||null,
+    price: parseFloat($('f_price').value)||0,
+    size: $('f_size').value.trim(),
+    material: $('f_material').value.trim(),
+    wechatLink: $('f_wechatLink').value.trim(),
+    tags: ($('f_tags').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+    description: $('f_description').value.trim(),
+    thumbnail: imgUrl,
+    images: imgUrl ? [imgUrl] : [],
+  };
+
+  if(editingId){
+    const idx = findIdx(editingId);
+    if(idx>=0) artworks[idx] = Object.assign(artworks[idx], artwork);
+  }else{
+    artworks.push(artwork);
+  }
+
+  if(await saveData()){
+    toast(editingId?'作品已更新':'作品已添加','ok');
+    closeModal();
+    renderArtworkTable($('listSearch').value);
+    renderDashboard();
+  }
+});
+
+function deleteArtwork(id){
+  if(!confirm('确定要删除「'+(artworks[findIdx(id)]?.title||'')+'」？')) return;
+  const idx = findIdx(id);
+  if(idx>=0) artworks.splice(idx,1);
+  saveData().then(()=>{
+    toast('已删除','ok');
+    renderArtworkTable($('listSearch').value);
+    renderDashboard();
+  });
+}
+
+function renderImagePreview(){
+  const url = $('f_imageUrl').value.trim();
+  $('imagePreview').innerHTML = url ? `<div class="img-item"><img src="${url}" alt=""></div>` : '';
+}
+
+$('f_imageUrl').addEventListener('input',renderImagePreview);
+
+/* =============================================================
+   Settings
+   ============================================================= */
+function renderSettings(){
+  const c = siteConfig;
+  const colors = c.colors||{};
+  const labels = {bg:'页面背景',card:'卡片背景',text:'主文字',text2:'次文字',border:'边框',accent:'强调色',accent2:'辅色',warm:'暖色',gold:'金色'};
+
+  $('settingsForm').innerHTML = `
+    <div class="settings-section">
+      <h3>基本信息</h3>
+      <div class="settings-grid">
+        <div class="settings-group"><label>网站名称</label><input id="s_name" value="${esc(c.siteName||'')}"></div>
+        <div class="settings-group"><label>副标题</label><input id="s_subtitle" value="${esc(c.subtitle||'')}"></div>
+        <div class="settings-group"><label>标语</label><input id="s_tagline" value="${esc(c.tagline||'')}"></div>
+        <div class="settings-group"><label>购买按钮文案</label><input id="s_buyBtn" value="${esc(c.buyBtnText||'')}"></div>
+        <div class="settings-group full"><label>关于画廊标题</label><input id="s_aboutTitle" value="${esc(c.aboutTitle||'')}"></div>
+        <div class="settings-group full"><label>关于画廊内容</label><textarea id="s_aboutContent" rows="3">${esc(c.aboutContent||'')}</textarea></div>
+        <div class="settings-group full"><label>页脚文案</label><input id="s_footer" value="${esc(c.footerText||'')}"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>配色方案</h3>
+      ${Object.entries(labels).map(([k,v])=>`
+        <div class="color-row">
+          <input type="color" value="${colors[k]||''}" data-c="${k}">
+          <span class="color-label">${v}</span>
+          <input type="text" value="${colors[k]||''}" data-c-t="${k}" maxlength="7">
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Sync color inputs
+  $('settingsForm').querySelectorAll('input[type="color"]').forEach(el=>{
+    el.addEventListener('input',function(){
+      const textEl = $('settingsForm').querySelector(`[data-c-t="${this.dataset.c}"]`);
+      if(textEl) textEl.value = this.value;
+    });
+  });
+  $('settingsForm').querySelectorAll('input[data-c-t]').forEach(el=>{
+    el.addEventListener('input',function(){
+      const colorEl = $('settingsForm').querySelector(`[data-c="${this.dataset['c-t']}"]`);
+      if(colorEl) colorEl.value = this.value;
+    });
+  });
+}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+$('saveSettings').addEventListener('click',async ()=>{
+  siteConfig.siteName = $('s_name').value.trim();
+  siteConfig.subtitle = $('s_subtitle').value.trim();
+  siteConfig.tagline = $('s_tagline').value.trim();
+  siteConfig.buyBtnText = $('s_buyBtn').value.trim()||'小红书购买';
+  siteConfig.aboutTitle = $('s_aboutTitle').value.trim();
+  siteConfig.aboutContent = $('s_aboutContent').value.trim();
+  siteConfig.footerText = $('s_footer').value.trim();
+  siteConfig.colors = siteConfig.colors || {};
+
+  $('settingsForm').querySelectorAll('input[data-c-t]').forEach(el=>{
+    const k = el.dataset['c-t'];
+    if(k) siteConfig.colors[k] = el.value;
+  });
+
+  if(await saveData()){
+    toast('设置已保存','ok');
+  }
+});
+
+/* =============================================================
+   Import/Export
+   ============================================================= */
+$('exportBtn').addEventListener('click',()=>{
+  const data = {siteConfig,artworks,exportedAt:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url;a.download='art-gallery-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(url);
+  toast('数据已导出','ok');
+});
+
+$('importBtn').addEventListener('click',()=>$('importInput').click());
+$('importInput').addEventListener('change',async function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!confirm('导入数据将覆盖当前所有内容，确认？')){this.value='';return}
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(data.artworks) artworks = data.artworks;
+      if(data.siteConfig) siteConfig = data.siteConfig;
+      if(await saveData()){
+        toast('数据已恢复 ('+artworks.length+' 件作品)','ok');
+        refreshAll();
+      }
+    }catch(e){toast('JSON 格式错误','err')}
+  };
+  reader.readAsText(file);
+  this.value='';
+});
+
+/* =============================================================
+   Tab switching
+   ============================================================= */
+document.querySelectorAll('.tabs button').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    $('panel-'+this.dataset.tab).classList.add('active');
+    if(this.dataset.tab==='settings') renderSettings();
+    if(this.dataset.tab==='dashboard') renderDashboard();
+  });
+});
+
+/* =============================================================
+   Search
+   ============================================================= */
+$('listSearch').addEventListener('input',function(){renderArtworkTable(this.value)});
+$('addBtn').addEventListener('click',()=>openEdit(0));
+
+function refreshAll(){
+  renderDashboard();
+  renderArtworkTable($('listSearch').value);
+  renderSettings();
+}
+
+/* =============================================================
+   Init
+   ============================================================= */
+async function showApp(){
+  $('loginWrap').style.display='none';
+  $('app').classList.add('show');
+
+  if(EMBEDDED_DATA && EMBEDDED_DATA.siteConfig) siteConfig = EMBEDDED_DATA.siteConfig;
+  await loadData();
+  if(!artworks.length && EMBEDDED_DATA.artworks) artworks = EMBEDDED_DATA.artworks;
+  renderDashboard();
+  renderArtworkTable();
+}
+</script>
+</body>
+</html>
