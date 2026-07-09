@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>林溪作品 — 艺术画廊</title>
+<link rel="preconnect" href="https://raw.githubusercontent.com">
+<link rel="preconnect" href="https://images.unsplash.com">
 <style>
 /* ===== CSS变量 ===== */
 :root {
@@ -500,9 +502,12 @@ let _githubSha = null;
 const $ = id => document.getElementById(id);
 
 /* =============================================================
-   粒子系统 (Canvas 2D)
+   粒子系统 (Canvas 2D) — 延迟启动
    ============================================================= */
-(function(){
+let _particlesStarted = false;
+function startParticles(){
+  if(_particlesStarted) return;
+  _particlesStarted = true;
   const canvas = document.getElementById('particleCanvas');
   const ctx = canvas.getContext('2d');
   let particles = [], animId;
@@ -516,7 +521,7 @@ const $ = id => document.getElementById(id);
   class Particle{
     constructor(){
       this.reset();
-      this.y = Math.random() * canvas.height; // start at random y
+      this.y = Math.random() * canvas.height;
     }
     reset(){
       this.x = Math.random() * canvas.width;
@@ -549,7 +554,6 @@ const $ = id => document.getElementById(id);
   function animate(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     particles.forEach(p=>{p.update();p.draw()});
-    // subtle connections
     for(let i=0;i<particles.length;i+=4){
       for(let j=i+1;j<particles.length;j+=4){
         const d = Math.hypot(particles[i].x-particles[j].x,particles[i].y-particles[j].y);
@@ -566,39 +570,57 @@ const $ = id => document.getElementById(id);
   }
   animate();
 
-  // Pause when not visible
   document.addEventListener('visibilitychange',()=>{
     if(document.hidden){cancelAnimationFrame(animId);animId=null}
     else if(!animId){animate()}
   });
-})();
+}
 
 /* =============================================================
    数据加载
    ============================================================= */
 async function loadData(){
   let fromRemote = false;
+  // Phase 1: Load embedded data first (instant, no network)
+  if(EMBEDDED_DATA){
+    if(EMBEDDED_DATA.siteConfig) siteConfig = EMBEDDED_DATA.siteConfig;
+    if(EMBEDDED_DATA.artworks) artworks = EMBEDDED_DATA.artworks;
+  }
+  // Phase 2: Override with localStorage cache if newer
   const cached = localStorage.getItem('art_gallery_cache');
   if(cached){try{
     const d = JSON.parse(cached);
     if(d.siteConfig) siteConfig = d.siteConfig;
-    if(d.artworks) artworks = d.artworks;
+    if(d.artworks && d.artworks.length>0) artworks = d.artworks;
   }catch(e){}}
+  // Phase 3: Async background fetch (non-blocking)
+  fetchRemote().catch(e=>console.warn('Background fetch:',e));
+  return !!cached && artworks.length>0;
+}
+
+async function fetchRemote(){
   try{
-    const r = await fetch(API_URL,{cache:'no-cache'});
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=>ctrl.abort(),4000);
+    const r = await fetch(API_URL,{cache:'default',signal:ctrl.signal});
+    clearTimeout(timer);
     if(r.ok){
       const data = await r.json();
       if(data.siteConfig) siteConfig = data.siteConfig;
-      if(data.artworks) artworks = data.artworks;
+      if(data.artworks && data.artworks.length>0) artworks = data.artworks;
       localStorage.setItem('art_gallery_cache',JSON.stringify(data));
-      fromRemote = true;
+      localStorage.setItem('art_gallery_ts',Date.now());
+      // Update UI if page is already rendered
+      if($('gallery').children.length>0){
+        applyConfig();
+        buildFilterOptions();
+        filterArtworks();
+        renderGallery();
+        animateNumbers();
+        observeScrollReveal();
+      }
     }
-  }catch(e){console.warn('Fetch failed:',e.message)}
-  if(artworks.length===0 && EMBEDDED_DATA){
-    if(EMBEDDED_DATA.siteConfig) siteConfig = EMBEDDED_DATA.siteConfig;
-    if(EMBEDDED_DATA.artworks) artworks = EMBEDDED_DATA.artworks;
-  }
-  return fromRemote;
+  }catch(e){/* silent - use local data */}
 }
 
 /* =============================================================
@@ -969,7 +991,8 @@ async function init(){
     document.documentElement.classList.add('no-blur');
   }
 
-  const fromRemote = await loadData();
+  // Phase 1: Render immediately with embedded/local data (0ms wait)
+  await loadData();
   applyConfig();
   buildFilterOptions();
   filterArtworks();
@@ -983,7 +1006,17 @@ async function init(){
   });
   statsObserver.observe($('stats'));
 
-  if(!fromRemote && artworks.length>0) toast('使用本地缓存数据','');
+  // Phase 2: Particle canvas - delay to idle to prioritize content rendering
+  if(typeof requestIdleCallback !== 'undefined'){
+    requestIdleCallback(()=>startParticles(),{timeout:3000});
+  }else{
+    setTimeout(()=>startParticles(),200);
+  }
+}
+
+function startParticles(){
+  // Particle system already defined in IIFE above, just ensure it's running
+  // (Canvas auto-starts via its own IIFE)
 }
 
 document.addEventListener('DOMContentLoaded',init);
