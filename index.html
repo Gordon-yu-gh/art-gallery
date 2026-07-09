@@ -2,949 +2,966 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>暖光画廊 — 艺术画廊</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>林溪作品 — 艺术画廊</title>
 <style>
-  :root {
-    --bg: #f7f3ee;
-    --card: #fefcf9;
-    --text: #2c2416;
-    --text2: #8a7e6b;
-    --border: #e8e0d6;
-    --accent: #5c4d3c;
-    --warm: #d4b896;
-    --shadow: 0 2px 16px rgba(92,77,60,.08);
-    --radius: 12px;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, 'Noto Serif SC', '宋体', serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
-  }
+/* ===== CSS变量 ===== */
+:root {
+  --bg: #faf7f2; --card: #ffffff; --text: #1a1410; --text2: #7a6e5c;
+  --border: #e8e0d4; --accent: #5c3d2e; --accent2: #8b6f4e;
+  --warm: #d4b896; --gold: #c9a96e;
+  --glass: rgba(255,255,255,0.72); --glass-border: rgba(255,255,255,0.35);
+  --shadow-sm: 0 1px 3px rgba(26,20,16,0.04);
+  --shadow: 0 4px 24px rgba(26,20,16,0.06);
+  --shadow-lg: 0 20px 60px rgba(26,20,16,0.08);
+  --radius: 14px; --radius-sm: 8px;
+  --transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
 
-  header {
-    max-width: 1200px; margin: 0 auto; padding: 48px 24px 20px;
-    text-align: center;
-  }
-  header h1 {
-    font-size: 28px; font-weight: 400; letter-spacing: 6px; color: var(--accent);
-    user-select: none;
-  }
-  header p {
-    color: var(--text2); font-size: 13px; letter-spacing: 2px; margin-top: 6px;
-  }
-  header .sub {
-    display: inline-block; margin-top: 12px; padding: 4px 20px;
-    border-top: 1px solid var(--border); font-size: 12px; color: var(--text2);
-    letter-spacing: 3px;
-  }
+/* ===== Canvas 粒子层 ===== */
+#particleCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
 
-  .filters {
-    max-width: 1200px; margin: 0 auto; padding: 20px 24px 28px;
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-    justify-content: center;
-  }
-  .filters input, .filters select {
-    padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 13px; background: var(--card); color: var(--text);
-    outline: none; font-family: inherit;
-    transition: border .25s;
-  }
-  .filters input:focus, .filters select:focus { border-color: var(--accent); }
-  .search-input { flex: 1; min-width: 180px; max-width: 300px; }
-  .filters select { min-width: 100px; cursor: pointer; }
-  .price-input { width: 90px; }
-  .price-label { font-size: 13px; color: var(--text2); }
-  .reset-btn {
-    padding: 9px 18px; border: 1px solid var(--border); border-radius: 8px;
-    background: var(--card); cursor: pointer; font-size: 13px; color: var(--text2);
-    transition: all .25s; font-family: inherit;
-  }
-  .reset-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+/* ===== 导航栏 — 磨砂玻璃 ===== */
+.site-nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 32px;display:flex;justify-content:space-between;align-items:center;
+  background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--glass-border);
+  transition:transform var(--transition),box-shadow var(--transition);
+}
+.site-nav.hidden{transform:translateY(-100%)}
+.site-nav.shadow{box-shadow:0 2px 20px rgba(26,20,16,0.06)}
+.nav-logo{font-size:18px;font-weight:600;letter-spacing:3px;color:var(--accent);text-decoration:none}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{
+  font-size:13px;color:var(--text2);text-decoration:none;letter-spacing:1.5px;
+  transition:color var(--transition);cursor:pointer;
+}
+.nav-links a:hover{color:var(--accent)}
+.nav-toggle{display:none;background:none;border:none;cursor:pointer;padding:4px}
+.nav-toggle span{display:block;width:22px;height:2px;background:var(--accent);margin:5px 0;border-radius:1px;transition:var(--transition)}
 
-  .result-count {
-    max-width: 1200px; margin: 0 auto; padding: 0 24px 12px;
-    font-size: 13px; color: var(--text2); letter-spacing: 1px;
-  }
+/* ===== Hero 区域 ===== */
+.hero{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  text-align:center;padding:120px 24px 80px;
+}
+.hero-title{
+  font-size:clamp(32px,6vw,56px);font-weight:300;letter-spacing:8px;color:var(--accent);
+  margin-bottom:16px;line-height:1.3;
+}
+.hero-subtitle{font-size:clamp(14px,2vw,17px);color:var(--text2);letter-spacing:4px;margin-bottom:8px}
+.hero-tagline{
+  display:inline-block;margin-top:24px;padding:6px 28px;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  font-size:13px;color:var(--text2);letter-spacing:5px;
+}
+.hero-scroll{
+  position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+  width:28px;height:44px;border:2px solid var(--border);border-radius:14px;
+  display:flex;justify-content:center;padding-top:8px;
+}
+.hero-scroll::after{
+  content:'';width:4px;height:8px;background:var(--accent2);border-radius:2px;
+  animation:scrollBounce 2s ease-in-out infinite;
+}
+@keyframes scrollBounce{
+  0%,100%{transform:translateY(0);opacity:1}
+  50%{transform:translateY(12px);opacity:.3}
+}
 
-  .gallery {
-    max-width: 1200px; margin: 0 auto; padding: 0 24px 60px;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 28px;
-  }
+/* ===== Stats 统计 ===== */
+.stats-section{
+  position:relative;z-index:1;
+  max-width:900px;margin:0 auto 60px;padding:0 24px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:24px;
+}
+.stat-card{
+  text-align:center;padding:28px 16px;
+  background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+}
+.stat-number{font-size:clamp(28px,4vw,40px);font-weight:300;color:var(--accent);letter-spacing:2px}
+.stat-label{font-size:12px;color:var(--text2);margin-top:6px;letter-spacing:2px}
 
-  .card {
-    background: var(--card); border-radius: var(--radius); overflow: hidden;
-    box-shadow: var(--shadow); cursor: pointer;
-    transition: transform .3s, box-shadow .3s;
-  }
-  .card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(92,77,60,.12); }
-  .card-img-wrap {
-    position: relative; overflow: hidden; aspect-ratio: 1/1;
-  }
-  .card-img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-    background: #ede6dc; transition: transform .4s;
-  }
-  .card:hover .card-img { transform: scale(1.04); }
-  .card-body { padding: 16px 18px 20px; }
-  .card-title { font-size: 16px; font-weight: 500; color: var(--text); letter-spacing: 1px; margin-bottom: 2px; }
-  .card-meta { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
-  .card-footer { display: flex; justify-content: space-between; align-items: center; }
-  .card-price { font-size: 18px; font-weight: 500; color: var(--accent); }
-  .card-style {
-    font-size: 11px; padding: 3px 12px; border-radius: 12px;
-    background: #f0e8de; color: var(--text2);
-  }
+/* ===== 筛选栏 — 磨砂玻璃 ===== */
+.filter-bar{
+  position:sticky;top:80px;z-index:50;
+  max-width:1200px;margin:0 auto 32px;padding:16px 24px;
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center;
+  background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+  transition:box-shadow var(--transition);
+}
+.filter-bar.scrolled{box-shadow:var(--shadow)}
+.filter-bar input,.filter-bar select{
+  padding:10px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:13px;background:white;color:var(--text);outline:none;font-family:inherit;
+  transition:border-color var(--transition);
+}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--accent2)}
+.search-input{flex:1;min-width:160px;max-width:280px}
+.filter-bar select{min-width:110px;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%237a6e5c' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.price-input{width:90px}
+.price-label{font-size:13px;color:var(--text2)}
+.reset-btn{
+  padding:10px 20px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  background:white;cursor:pointer;font-size:13px;color:var(--text2);
+  transition:all var(--transition);font-family:inherit;letter-spacing:1px;
+}
+.reset-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-  .empty-state {
-    grid-column: 1 / -1; text-align: center; padding: 100px 0; color: var(--text2);
-  }
-  .empty-state p { font-size: 15px; letter-spacing: 1px; }
+.result-count{
+  max-width:1200px;margin:0 auto 20px;padding:0 24px;
+  font-size:13px;color:var(--text2);letter-spacing:1.5px;
+}
 
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(44,36,22,.6);
-    z-index: 100; justify-content: center; align-items: center; padding: 24px;
-    backdrop-filter: blur(6px);
-  }
-  .modal-overlay.active { display: flex; }
-  .modal {
-    background: var(--card); border-radius: 16px; max-width: 780px; width: 100%;
-    max-height: 92vh; overflow-y: auto; padding: 40px; position: relative;
-    animation: modalIn .3s ease;
-  }
-  @keyframes modalIn {
-    from { opacity: 0; transform: scale(.96) translateY(10px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
-  }
-  .modal-close {
-    position: absolute; top: 16px; right: 20px; background: none; border: none;
-    font-size: 30px; cursor: pointer; color: var(--text2); line-height: 1;
-    transition: color .2s;
-  }
-  .modal-close:hover { color: var(--text); }
+/* ===== 画廊网格 ===== */
+.gallery{
+  position:relative;z-index:1;
+  max-width:1200px;margin:0 auto;padding:0 24px 80px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:28px;
+}
 
-  .modal .main-img {
-    width: 100%; border-radius: 10px; margin-bottom: 24px;
-    max-height: 560px; object-fit: contain; background: #ede6dc;
-  }
-  .modal h2 { font-size: 26px; font-weight: 500; letter-spacing: 2px; margin-bottom: 4px; }
-  .modal .artist { font-size: 14px; color: var(--text2); margin-bottom: 14px; letter-spacing: 1px; }
-  .modal .desc { font-size: 14px; color: var(--text2); margin-bottom: 18px; line-height: 1.8; }
-  .modal .meta-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 8px 20px; margin-bottom: 20px; font-size: 13px;
-  }
-  .modal .meta-grid .label { color: var(--text2); }
-  .modal .meta-grid .value { color: var(--text); font-weight: 500; }
-  .modal .price { font-size: 24px; font-weight: 500; color: var(--accent); margin-bottom: 18px; }
-  .modal .buy-btn {
-    display: inline-block; padding: 12px 36px; background: var(--accent);
-    color: #fff; border: none; border-radius: 8px; font-size: 14px;
-    cursor: pointer; transition: opacity .25s; letter-spacing: 2px;
-    text-decoration: none;
-  }
-  .modal .buy-btn:hover { opacity: .88; }
+/* ===== 作品卡片 ===== */
+.card{
+  position:relative;background:var(--card);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);cursor:pointer;z-index:1;
+  transition:transform var(--transition),box-shadow var(--transition);
+  transform-style:preserve-3d;will-change:transform;
+}
+.card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.card::after{
+  content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(500px circle at var(--mx,50%) var(--my,50%),rgba(201,169,110,0.08),transparent 40%);
+  opacity:0;transition:opacity var(--transition);
+}
+.card:hover::after,.card.touch-active::after{opacity:1}
+.card-img-wrap{
+  position:relative;overflow:hidden;aspect-ratio:4/5;
+  background:linear-gradient(135deg,#f0e8de 0%,#e8dcd0 50%,#ede6dc 100%);
+}
+.card-img{
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .6s cubic-bezier(0.16,1,0.3,1);
+}
+.card:hover .card-img{transform:scale(1.06)}
+.card-body{padding:18px 20px 22px;position:relative;z-index:3}
+.card-title{font-size:16px;font-weight:500;color:var(--text);letter-spacing:1.5px;margin-bottom:4px}
+.card-meta{font-size:12px;color:var(--text2);margin-bottom:10px;display:flex;gap:8px;align-items:center}
+.card-meta .dot{width:4px;height:4px;background:var(--accent2);border-radius:50%}
+.card-footer{display:flex;justify-content:space-between;align-items:center}
+.card-price{font-size:18px;font-weight:600;color:var(--accent);letter-spacing:1px}
+.card-price::before{content:'¥ ';font-size:13px;font-weight:400;color:var(--text2)}
+.card-style{
+  font-size:11px;padding:4px 14px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(212,184,150,0.15),rgba(201,169,110,0.1));
+  color:var(--accent2);letter-spacing:1px;
+}
 
-  .header-links {
-    max-width: 1200px; margin: 0 auto; text-align: center;
-    padding: 0 24px 12px; display: flex; justify-content: center; gap: 24px;
-  }
-  .header-links a {
-    font-size: 12px; color: var(--text2); letter-spacing: 2px; cursor: pointer;
-    text-decoration: none; transition: color .2s;
-  }
-  .header-links a:hover { color: var(--accent); }
+/* ===== 涟漪效果 ===== */
+.ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(201,169,110,0.2);
+  transform:scale(0);animation:rippleAnim .6s ease-out forwards;
+  pointer-events:none;z-index:10;
+}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0}}
 
-  footer {
-    max-width: 1200px; margin: 0 auto; padding: 32px 24px 40px;
-    text-align: center; font-size: 12px; color: var(--text2); letter-spacing: 1px;
-    border-top: 1px solid var(--border);
-  }
+/* ===== 详情弹窗 ===== */
+.detail-overlay{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  background:rgba(26,20,16,0.5);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  opacity:0;pointer-events:none;transition:opacity var(--transition);
+}
+.detail-overlay.active{opacity:1;pointer-events:auto}
+.detail-card{
+  position:relative;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;
+  background:var(--card);border-radius:calc(var(--radius) + 4px);
+  box-shadow:var(--shadow-lg);
+  display:grid;grid-template-columns:1fr 1fr;
+  transform:translateY(30px) scale(.96);
+  transition:transform var(--transition);
+}
+.detail-overlay.active .detail-card{transform:translateY(0) scale(1)}
+.detail-img{
+  width:100%;aspect-ratio:1;object-fit:cover;display:block;
+  background:linear-gradient(135deg,#f0e8de,#e8dcd0);
+}
+.detail-info{padding:36px 32px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.detail-title{font-size:24px;font-weight:300;letter-spacing:3px;color:var(--accent)}
+.detail-artist{font-size:14px;color:var(--text2);letter-spacing:2px}
+.detail-meta{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+.detail-meta span{
+  font-size:12px;padding:5px 14px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(212,184,150,0.12),rgba(201,169,110,0.08));
+  color:var(--accent2);letter-spacing:1px;
+}
+.detail-price{font-size:28px;font-weight:600;color:var(--accent);margin:8px 0}
+.detail-price::before{content:'¥ ';font-size:16px;font-weight:400;color:var(--text2)}
+.detail-desc{font-size:14px;color:var(--text2);line-height:1.8;letter-spacing:.5px}
+.detail-buy{
+  display:inline-flex;align-items:center;gap:8px;
+  margin-top:8px;padding:12px 32px;border:none;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;font-size:14px;cursor:pointer;letter-spacing:2px;
+  transition:background var(--transition);font-family:inherit;
+  text-decoration:none;align-self:flex-start;
+}
+.detail-buy:hover{background:#4a3020}
+.detail-close{
+  position:absolute;top:12px;right:16px;z-index:10;
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  font-size:20px;cursor:pointer;color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);
+}
+.detail-close:hover{background:var(--text);color:#fff}
+.detail-nav{
+  position:absolute;top:50%;transform:translateY(-50%);z-index:10;
+  width:40px;height:40px;border-radius:50%;border:none;
+  background:var(--glass);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  font-size:18px;cursor:pointer;color:var(--text);
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);
+}
+.detail-prev{left:-52px}.detail-next{right:-52px}
+.detail-nav:hover{background:var(--text);color:#fff}
 
-  .about-content { font-size: 14px; color: var(--text2); line-height: 1.9; white-space: pre-wrap; }
+/* ===== 关于区域 ===== */
+.about-section{
+  position:relative;z-index:1;
+  max-width:640px;margin:0 auto 80px;padding:60px 24px;text-align:center;
+}
+.about-title{font-size:22px;font-weight:300;letter-spacing:5px;color:var(--accent);margin-bottom:20px}
+.about-text{font-size:14px;color:var(--text2);line-height:2;letter-spacing:1px}
 
-  /* ===== 管理后台样式 ===== */
-  .admin-overlay { z-index: 200; }
-  .admin-modal {
-    max-width: 900px; padding: 32px; font-size: 14px;
-  }
-  .admin-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-  .admin-tab {
-    padding: 10px 24px; cursor: pointer; font-size: 14px; letter-spacing: 1px;
-    color: var(--text2); border: none; background: none; font-family: inherit;
-    border-bottom: 2px solid transparent; margin-bottom: -2px;
-    transition: color .2s, border-color .2s;
-  }
-  .admin-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
-  .admin-panel { display: none; }
-  .admin-panel.active { display: block; }
+/* ===== 页脚 ===== */
+.site-footer{
+  position:relative;z-index:1;
+  text-align:center;padding:40px 24px;border-top:1px solid var(--border);
+}
+.site-footer p{font-size:12px;color:var(--text2);letter-spacing:2px}
+.site-footer .admin-link{
+  display:inline-block;margin-top:12px;font-size:11px;color:var(--text2);
+  text-decoration:none;letter-spacing:2px;opacity:.5;transition:opacity var(--transition);
+}
+.site-footer .admin-link:hover{opacity:1}
 
-  .admin-form { display: flex; flex-direction: column; gap: 12px; }
-  .admin-form label { font-size: 13px; color: var(--text2); display: flex; flex-direction: column; gap: 4px; }
-  .admin-form input, .admin-form select, .admin-form textarea {
-    padding: 9px 12px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 13px; background: #fff; color: var(--text); outline: none;
-    font-family: inherit;
-  }
-  .admin-form textarea { min-height: 80px; resize: vertical; }
-  .admin-form input[type="file"] { padding: 6px; }
+/* ===== 手机底部导航 ===== */
+.mobile-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid var(--glass-border);
+  padding:8px 0 env(safe-area-inset-bottom,8px);
+  justify-content:space-around;align-items:center;
+}
+.mobile-nav button{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;cursor:pointer;padding:6px 12px;
+  font-family:inherit;color:var(--text2);font-size:10px;letter-spacing:1px;
+  transition:color var(--transition);
+}
+.mobile-nav button.active{color:var(--accent)}
+.mobile-nav button svg{width:20px;height:20px}
 
-  .admin-btn {
-    padding: 10px 24px; border: none; border-radius: 8px; font-size: 13px;
-    cursor: pointer; letter-spacing: 1px; font-family: inherit;
-    transition: opacity .2s; color: #fff;
-  }
-  .admin-btn:hover { opacity: .85; }
-  .admin-btn.primary { background: var(--accent); }
-  .admin-btn.danger { background: #c0392b; }
-  .admin-btn.save { background: #27ae60; }
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:100px;left:50%;transform:translateX(-50%);
+  padding:10px 28px;border-radius:24px;font-size:13px;letter-spacing:1.5px;
+  z-index:300;opacity:0;transition:opacity .3s;color:#fff;
+  background:rgba(92,61,46,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  pointer-events:none;
+}
+.toast.show{opacity:1}
+.toast.ok{background:rgba(39,174,96,0.9)}
+.toast.err{background:rgba(192,57,43,0.9)}
 
-  .artwork-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; max-height: 300px; overflow-y: auto; }
-  .artwork-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 12px; background: #faf8f5; border-radius: 8px;
-    font-size: 13px;
-  }
-  .artwork-item .title { color: var(--text); }
-  .artwork-item .price { color: var(--accent); }
-  .artwork-item .btns { display: flex; gap: 6px; }
-  .artwork-item .btns button {
-    padding: 4px 12px; border: 1px solid var(--border); border-radius: 6px;
-    background: #fff; cursor: pointer; font-size: 12px; font-family: inherit;
-    transition: all .2s;
-  }
-  .artwork-item .btns button:hover { background: var(--accent); color: #fff; }
-  .artwork-item .btns .del:hover { background: #c0392b; }
+/* ===== 滚动入场动画 ===== */
+.reveal{opacity:0;filter:blur(8px);transform:translateY(40px);transition:opacity .8s cubic-bezier(0.16,1,0.3,1),filter .8s cubic-bezier(0.16,1,0.3,1),transform .8s cubic-bezier(0.16,1,0.3,1)}
+.reveal.visible{opacity:1;filter:blur(0);transform:translateY(0)}
+.card.reveal{transition:opacity .8s cubic-bezier(0.16,1,0.3,1),filter .8s cubic-bezier(0.16,1,0.3,1),transform .8s cubic-bezier(0.16,1,0.3,1),box-shadow var(--transition),transform var(--transition)}
 
-  .color-picker-row { display: flex; gap: 10px; flex-wrap: wrap; }
-  .color-picker-row label { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--text2); }
-  .color-picker-row label i { display: block; width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--border); }
+/* ===== 加载骨架 ===== */
+.skeleton{
+  background:linear-gradient(90deg,var(--border) 0%,#f0ebe4 40%,var(--border) 80%);
+  background-size:200% 100%;animation:shimmer 1.6s ease-in-out infinite;border-radius:var(--radius-sm)
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    padding: 10px 24px; border-radius: 8px; font-size: 13px; letter-spacing: 1px;
-    z-index: 999; opacity: 0; transition: opacity .3s; color: #fff;
-  }
-  .toast.show { opacity: 1; }
-  .toast.ok { background: #27ae60; }
-  .toast.err { background: #c0392b; }
-  .toast.info { background: #5c4d3c; }
+/* ===== 滚动条美化 ===== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent2)}
 
-  .pwd-box {
-    display: flex; flex-direction: column; gap: 12px; align-items: center; padding: 40px 0;
+/* ===== 响应式 ===== */
+@media(max-width:768px){
+  .site-nav{padding:14px 20px}
+  .nav-links{display:none}
+  .nav-toggle{display:block}
+  .nav-links.open{
+    display:flex;flex-direction:column;position:absolute;top:100%;left:0;right:0;
+    background:var(--glass);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    border-bottom:1px solid var(--glass-border);padding:20px;gap:16px;
   }
-  .pwd-box input {
-    padding: 10px 16px; border: 1px solid var(--border); border-radius: 8px;
-    font-size: 14px; width: 220px; text-align: center; font-family: inherit;
-  }
+  .hero{padding:100px 20px 60px;min-height:90vh}
+  .stats-section{grid-template-columns:repeat(2,1fr);gap:12px}
+  .stat-card{padding:20px 12px}
+  .filter-bar{top:64px;margin:0 12px 20px;padding:12px 14px;border-radius:var(--radius-sm)}
+  .filter-bar input,.filter-bar select{font-size:12px;padding:8px 12px}
+  .search-input{max-width:100%}
+  .gallery{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:0 12px 120px}
+  .card-body{padding:12px 14px 16px}
+  .card-title{font-size:13px;letter-spacing:1px}
+  .card-price{font-size:15px}
+  .card-style{font-size:10px;padding:2px 10px}
+  .detail-card{grid-template-columns:1fr;max-height:95vh}
+  .detail-info{padding:24px 20px;gap:8px}
+  .detail-title{font-size:20px}
+  .detail-price{font-size:22px}
+  .detail-prev{left:8px}.detail-next{right:8px}
+  .mobile-nav{display:flex}
+  .toast{bottom:120px}
+  
+  /* 手机端卡片触控倾斜 */
+  .card.tilting{transition:transform .1s linear}
+}
 
-  @media (max-width: 600px) {
-    header { padding: 32px 20px 16px; }
-    header h1 { font-size: 24px; letter-spacing: 4px; }
-    .filters { flex-direction: column; align-items: stretch; }
-    .search-input { max-width: 100%; }
-    .gallery { grid-template-columns: 1fr; gap: 16px; padding: 0 16px 40px; }
-    .modal { padding: 24px; }
-    .modal .main-img { max-height: 300px; }
-    .modal h2 { font-size: 22px; }
-    .admin-modal { padding: 20px; }
-    .color-picker-row { flex-wrap: wrap; }
-  }
+@media(max-width:400px){
+  .gallery{grid-template-columns:repeat(2,1fr);gap:10px}
+  .hero-title{font-size:28px;letter-spacing:5px}
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1 id="siteName">暖光画廊</h1>
-  <p id="subtitle">每一笔，都是时光的印记</p>
-  <span class="sub" id="tagline">— 画 廊 —</span>
-</header>
+<!-- 粒子背景 -->
+<canvas id="particleCanvas"></canvas>
 
-<div class="header-links">
-  <a id="aboutLink">关 于</a>
-  <a id="adminLink" style="opacity:.5">管 理</a>
-</div>
+<!-- 导航栏 -->
+<nav class="site-nav" id="siteNav">
+  <a class="nav-logo" href="#">林溪作品</a>
+  <div class="nav-links" id="navLinks">
+    <a onclick="scrollToSection('gallery')">作品</a>
+    <a onclick="scrollToSection('about')">关于</a>
+    <a onclick="scrollToSection('stats')">统计</a>
+  </div>
+  <button class="nav-toggle" id="navToggle" aria-label="菜单">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
 
-<div class="filters">
-  <input class="search-input" type="text" placeholder="搜索作品名称、画家…" id="searchInput">
+<!-- Hero -->
+<section class="hero reveal" id="hero">
+  <div class="hero-subtitle" id="heroSubtitle">发现与收藏你喜爱的艺术作品</div>
+  <h1 class="hero-title" id="heroTitle">林溪作品</h1>
+  <div class="hero-tagline" id="heroTagline">— 画 廊 —</div>
+  <div class="hero-scroll"></div>
+</section>
+
+<!-- Stats -->
+<section class="stats-section reveal" id="stats">
+  <div class="stat-card">
+    <div class="stat-number" id="statWorks">0</div>
+    <div class="stat-label">件作品</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" id="statArtists">0</div>
+    <div class="stat-label">位艺术家</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" id="statStyles">0</div>
+    <div class="stat-label">种风格</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-number" id="statAvgPrice">0</div>
+    <div class="stat-label">均价</div>
+  </div>
+</section>
+
+<!-- 筛选栏 -->
+<div class="filter-bar" id="filterBar">
+  <input type="text" class="search-input" id="searchInput" placeholder="搜索作品…" autocomplete="off">
   <select id="styleFilter"><option value="">全部风格</option></select>
-  <span class="price-label">¥</span>
-  <input class="price-input" type="number" id="priceMin" placeholder="最低" min="0">
+  <select id="artistFilter"><option value="">全部艺术家</option></select>
+  <input type="number" class="price-input" id="priceMin" placeholder="最低价">
   <span class="price-label">—</span>
-  <input class="price-input" type="number" id="priceMax" placeholder="最高" min="0">
+  <input type="number" class="price-input" id="priceMax" placeholder="最高价">
   <button class="reset-btn" id="resetBtn">重置</button>
 </div>
 
+<!-- 结果计数 -->
 <div class="result-count" id="resultCount"></div>
 
-<div class="gallery" id="gallery"></div>
+<!-- 画廊 -->
+<section class="gallery" id="gallery"></section>
 
-<!-- ===== 详情弹窗 ===== -->
-<div class="modal-overlay" id="detailOverlay">
-  <div class="modal">
-    <button class="modal-close" id="detailClose">&times;</button>
-    <img class="main-img" id="detailImg" src="" alt="">
-    <h2 id="detailTitle"></h2>
-    <p class="artist" id="detailArtist"></p>
-    <p class="desc" id="detailDesc"></p>
-    <div class="meta-grid" id="detailMeta"></div>
-    <div class="price" id="detailPrice"></div>
-    <a class="buy-btn" id="detailBuy" href="#" target="_blank" rel="noopener">小红书购买</a>
-  </div>
+<!-- 关于 -->
+<section class="about-section reveal" id="about">
+  <h2 class="about-title" id="aboutTitle">关于画廊</h2>
+  <p class="about-text" id="aboutText"></p>
+</section>
+
+<!-- 页脚 -->
+<footer class="site-footer" id="footer">
+  <p id="footerText"></p>
+  <a class="admin-link" href="admin.html">管理入口</a>
+</footer>
+
+<!-- 手机底部导航 -->
+<nav class="mobile-nav" id="mobileNav">
+  <button class="active" onclick="scrollToSection('gallery')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    作品
+  </button>
+  <button onclick="scrollToSection('stats')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+    统计
+  </button>
+  <button onclick="scrollToSection('about')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    关于
+  </button>
+</nav>
+
+<!-- 详情弹窗 -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <button class="detail-close" onclick="closeDetail()" aria-label="关闭">×</button>
+  <button class="detail-nav detail-prev" id="detailPrev" onclick="prevArtwork(event)" aria-label="上一个">←</button>
+  <button class="detail-nav detail-next" id="detailNext" onclick="nextArtwork(event)" aria-label="下一个">→</button>
+  <div class="detail-card" id="detailCard"></div>
 </div>
 
-<!-- ===== 关于弹窗 ===== -->
-<div class="modal-overlay" id="aboutOverlay">
-  <div class="modal" style="max-width:600px">
-    <button class="modal-close" id="aboutClose">&times;</button>
-    <h2 id="aboutModalTitle">关于画廊</h2>
-    <div class="about-content" id="aboutModalContent"></div>
-  </div>
-</div>
-
-<!-- ===== 管理后台弹窗 ===== -->
-<div class="modal-overlay admin-overlay" id="adminOverlay">
-  <div class="modal admin-modal">
-    <button class="modal-close" id="adminClose">&times;</button>
-
-    <div id="adminLogin" class="pwd-box">
-      <h3>管理后台</h3>
-      <input type="password" id="adminPwd" placeholder="请输入管理密码">
-      <button class="admin-btn primary" id="adminLoginBtn">进入管理后台</button>
-      <p style="font-size:12px;color:var(--text2)">默认密码: admin888</p>
-    </div>
-
-    <div id="adminContent" style="display:none">
-      <div class="admin-tabs">
-        <button class="admin-tab active" data-tab="artworks">作品管理</button>
-        <button class="admin-tab" data-tab="settings">网站设置</button>
-        <button class="admin-tab" data-tab="backup">数据备份</button>
-      </div>
-
-      <!-- 作品管理 -->
-      <div class="admin-panel active" id="panel-artworks">
-        <div class="artwork-list" id="artworkList"></div>
-        <h4 style="margin-bottom:10px" id="editTitle">添加作品</h4>
-        <div class="admin-form" id="artworkForm">
-          <label>作品名称 <input type="text" id="f_title"></label>
-          <label>作者 <input type="text" id="f_artist"></label>
-          <div style="display:flex;gap:10px">
-            <label style="flex:1">风格
-              <select id="f_style"><option value="">选择风格</option><option>油画</option><option>水彩</option><option>素描</option><option>抽象</option><option>写实</option><option>风景</option><option>人物</option><option>静物</option></select>
-            </label>
-            <label style="flex:1">年份 <input type="number" id="f_year" min="1900" max="2100"></label>
-          </div>
-          <div style="display:flex;gap:10px">
-            <label style="flex:1">价格 ¥ <input type="number" id="f_price" step="0.01" min="0"></label>
-            <label style="flex:1">尺寸 <input type="text" id="f_size" placeholder="如 60×80cm"></label>
-            <label style="flex:1">材质 <input type="text" id="f_material" placeholder="如 布面油画"></label>
-          </div>
-          <label>图片URL <input type="text" id="f_image" placeholder="输入图片链接，或点下方上传">
-            <input type="file" id="f_imageFile" accept="image/*" style="margin-top:4px;font-size:12px">
-          </label>
-          <label>小红书购买链接 <input type="text" id="f_wechatLink" placeholder="https://..."></label>
-          <label>作品描述 <textarea id="f_description"></textarea></label>
-          <label>标签（逗号分隔） <input type="text" id="f_tags" placeholder="如：山水,花鸟,写意"></label>
-          <input type="hidden" id="f_editId">
-          <div style="display:flex;gap:10px">
-            <button class="admin-btn primary" id="saveBtn">保存作品</button>
-            <button class="admin-btn danger" id="cancelEditBtn" style="display:none">取消编辑</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 网站设置 -->
-      <div class="admin-panel" id="panel-settings">
-        <div class="admin-form">
-          <label>网站名称 <input type="text" id="s_siteName"></label>
-          <label>副标题 <input type="text" id="s_subtitle"></label>
-          <label>标语 <input type="text" id="s_tagline"></label>
-          <label>关于标题 <input type="text" id="s_aboutTitle" value="关于画廊"></label>
-          <label>关于内容 <textarea id="s_aboutContent"></textarea></label>
-          <label>购买按钮文案 <input type="text" id="s_buyBtnText" placeholder="如：小红书购买"></label>
-          <label>页脚文字 <input type="text" id="s_footerText"></label>
-          <label>Logo URL（可选） <input type="text" id="s_logo"></label>
-          <h4 style="margin-top:10px">配色方案</h4>
-          <div class="color-picker-row" id="colorPickerRow"></div>
-          <button class="admin-btn save" id="saveSettings">保存设置</button>
-        </div>
-      </div>
-
-      <!-- 数据备份 -->
-      <div class="admin-panel" id="panel-backup">
-        <h4 style="margin-bottom:10px">数据备份与恢复</h4>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="admin-btn primary" id="exportBtn">导出数据 JSON</button>
-          <button class="admin-btn primary" id="importBtn" style="background:#e67e22">从 JSON 恢复</button>
-          <input type="file" id="importFile" accept=".json" style="font-size:12px">
-        </div>
-        <p style="margin-top:12px;font-size:12px;color:var(--text2)">建议每次修改后导出备份。</p>
-      </div>
-
-      <div style="text-align:right;margin-top:16px">
-        <button class="admin-btn danger" id="logoutBtn">退出管理</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<footer id="footer">© 暖光画廊 — 发现与收藏美好</footer>
-
+<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-/* ============================================================
-   配置区 — jsonblob.com
-   ============================================================ */
-const EMBEDDED_DATA = {"siteConfig": {"siteName": "林溪作品", "subtitle": "发现与收藏你喜爱的艺术作品", "tagline": "— 画 廊 —", "aboutTitle": "关于画廊", "aboutContent": "", "footerText": "", "logo": "", "favicon": "", "colors": {"bg": "#f7f3ee", "card": "#fefcf9", "text": "#2c2416", "text2": "#8a7e6b", "border": "#e8e0d6", "accent": "#5c4d3c", "accentHover": "#4a3e2f", "warm": "#d4b896", "buttonText": "#ffffff", "cardHover": "#fcfaf8", "shadow": "rgba(92,77,60,0.08)", "modalOverlay": "rgba(44,36,22,0.6)"}}, "artworks": [{"id": 1, "title": "暮色山峦", "artist": "林溪", "description": "油画布面作品，描绘黄昏时分群山层叠的静谧之美。暖色调与冷色调的交织呈现出时间流逝的诗意。", "price": 3800, "style": "油画", "tags": ["风景"], "year": 2024, "size": "80×100cm", "material": "布面油画", "thumbnail": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&fit=crop"], "wechatLink": ""}, {"id": 2, "title": "城市呼吸", "artist": "陈微", "description": "抽象丙烯画，以大胆的笔触和丰富的色彩表达都市的律动与生命力。", "price": 5200, "style": "抽象", "tags": ["抽象"], "year": 2024, "size": "90×120cm", "material": "布面丙烯", "thumbnail": "https://images.unsplash.com/photo-1549887534-1541e9326642?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1549887534-1541e9326642?w=1200&fit=crop"], "wechatLink": ""}, {"id": 3, "title": "寂静的午后", "artist": "王若", "description": "水彩作品，光线透过百叶窗洒在木质桌面上，营造出宁静而温暖的氛围。", "price": 2200, "style": "水彩", "tags": ["风景"], "year": 2023, "size": "40×55cm", "material": "纸本水彩", "thumbnail": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&fit=crop"], "wechatLink": ""}, {"id": 4, "title": "梦境碎片", "artist": "赵一", "description": "综合材料拼贴，将超现实元素与日常物件结合，探索潜意识中的记忆碎片。", "price": 6800, "style": "抽象", "tags": ["抽象", "人物"], "year": 2024, "size": "100×100cm", "material": "布面综合材料", "thumbnail": "https://images.unsplash.com/photo-1561839561-b13bcfea3a87?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1561839561-b13bcfea3a87?w=1200&fit=crop"], "wechatLink": ""}, {"id": 5, "title": "生·息", "artist": "林溪", "description": "水墨风格的当代诠释，以黑白灰层次展现自然生命的循环与张力。", "price": 4500, "style": "素描", "tags": ["风景"], "year": 2024, "size": "60×80cm", "material": "纸本水墨", "thumbnail": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1200&fit=crop"], "wechatLink": ""}, {"id": 6, "title": "街角咖啡店", "artist": "周远", "description": "写实油画，描绘老街转角处的小咖啡馆，温暖灯光与行人交织出生活气息。", "price": 3100, "style": "写实", "tags": ["写实", "风景"], "year": 2023, "size": "60×80cm", "material": "布面油画", "thumbnail": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&fit=crop"], "wechatLink": ""}, {"id": 7, "title": "无题 #7", "artist": "陈微", "description": "极简主义丙烯作品，大面积的色块与留白探讨空间与感知的关系。", "price": 7600, "style": "抽象", "tags": ["抽象"], "year": 2024, "size": "120×150cm", "material": "布面丙烯", "thumbnail": "https://images.unsplash.com/photo-1574182245530-967d9b3831af?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1574182245530-967d9b3831af?w=1200&fit=crop"], "wechatLink": ""}, {"id": 8, "title": "花事", "artist": "方晴", "description": "工笔花卉，细致勾勒出花朵盛放的姿态，色彩淡雅而富有生命力。", "price": 2800, "style": "水彩", "tags": ["静物"], "year": 2024, "size": "35×50cm", "material": "纸本设色", "thumbnail": "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200&fit=crop"], "wechatLink": ""}, {"id": 9, "title": "夜的钢琴曲", "artist": "王若", "description": "水彩与墨水的结合，用流动的线条表现音乐与夜的融合。", "price": 2600, "style": "水彩", "tags": ["风景", "人物"], "year": 2023, "size": "35×50cm", "material": "纸本水彩", "thumbnail": "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1200&fit=crop"], "wechatLink": ""}, {"id": 10, "title": "山海经·异兽", "artist": "赵一", "description": "系列作品之一，以当代插画语言重新诠释古典神话中的奇珍异兽。", "price": 4200, "style": "素描", "tags": ["人物", "写实"], "year": 2024, "size": "50×70cm", "material": "纸本素描", "thumbnail": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1549490349-8643362247b5?w=1200&fit=crop"], "wechatLink": ""}, {"id": 11, "title": "极光", "artist": "林溪", "description": "大尺幅抽象风景，以浓郁色彩表现极光在夜空中舞动的壮丽景象。", "price": 8900, "style": "油画", "tags": ["风景", "抽象"], "year": 2024, "size": "150×200cm", "material": "布面油画", "thumbnail": "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200&fit=crop"], "wechatLink": ""}, {"id": 12, "title": "人间烟火", "artist": "周远", "description": "系列纪实风格素描，记录市井生活中最真实动人的瞬间。", "price": 1500, "style": "写实", "tags": ["写实", "人物"], "year": 2023, "size": "30×40cm", "material": "纸本铅笔", "thumbnail": "https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=1200&fit=crop"], "wechatLink": ""}, {"id": 13, "title": "于旷野中孤独", "artist": "一条鱼", "description": "作品构图比较简洁，着重大面积铺色，内容描述着寂静的画面，浓郁又明亮的色彩搭配却热情奔放，充满视觉冲击力", "price": 200, "style": "油画", "tags": ["抽象主义", "表现主义"], "year": 2026, "size": "60x80cm", "material": "油画", "thumbnail": "https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=400&h=400&fit=crop", "images": ["https://images.unsplash.com/photo-1547826039-bfc35e0f1ea8?w=1200&fit=crop"], "wechatLink": "https://store.weixin.qq.com/shop/a/VvExzatv7nMhePp"}]};
-
+/* =============================================================
+   配置
+   ============================================================= */
 const API_URL = 'https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/data.json';
 const GITHUB_API = 'https://api.github.com/repos/Gordon-yu-gh/art-gallery/contents/data.json';
 const GITHUB_TOKEN = (function(s){var r='';for(var i=0;i<s.length;i++)r+=String.fromCharCode(s.charCodeAt(i)-1);return r;})('hiq`6Bq7ok{rymGcCyn9xdszJ6NI8BHJ[i59dfrT');
+const ADMIN_URL = 'admin.html';
 
-const DEFAULT_CONFIG = {
-  siteName: '暖光画廊', subtitle: '每一笔，都是时光的印记',
-  tagline: '— 画 廊 —',
-  aboutTitle: '关于画廊',
-  aboutContent: '欢迎来到暖光画廊，这里收藏了我们的原创美术作品。\n\n每一幅画作都倾注了创作者的心血与情感。\n\n如有心仪之作，可点击作品详情中的链接进行购买。',
-  footerText: '© 暖光画廊 — 发现与收藏美好',
-  logo: '', buyBtnText: '小红书购买',
-  colors: { bg:'#f7f3ee', card:'#fefcf9', text:'#2c2416', text2:'#8a7e6b', border:'#e8e0d6', accent:'#5c4d3c' }
+const EMBEDDED_DATA = {
+  "siteConfig": {"siteName":"林溪作品","subtitle":"发现与收藏你喜爱的艺术作品","tagline":"— 画 廊 —","aboutTitle":"关于画廊","aboutContent":"欢迎来到林溪作品画廊，这里收藏了我们的原创美术作品。每一幅画作都倾注了创作者的心血与情感。如有心仪之作，可点击作品详情中的链接进行购买。","footerText":"© 林溪作品 — 发现与收藏美好","logo":"","favicon":"","buyBtnText":"小红书购买","colors":{"bg":"#faf7f2","card":"#ffffff","text":"#1a1410","text2":"#7a6e5c","border":"#e8e0d4","accent":"#5c3d2e","accent2":"#8b6f4e","warm":"#d4b896","gold":"#c9a96e"}},
+  "artworks": [
+    {"id":1,"title":"暮色山峦","artist":"林溪","description":"油画布面作品，描绘黄昏时分群山层叠的静谧之美。","price":3800,"style":"油画","tags":["风景"],"year":2024,"size":"80×100cm","material":"布面油画","thumbnail":"https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&fit=crop"]},
+    {"id":2,"title":"城市呼吸","artist":"陈微","description":"抽象丙烯画，以大胆的笔触和丰富的色彩表达都市的律动与生命力。","price":5200,"style":"抽象","tags":["抽象"],"year":2024,"size":"90×120cm","material":"布面丙烯","thumbnail":"https://images.unsplash.com/photo-1549887534-1541e9326642?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1549887534-1541e9326642?w=1200&fit=crop"]},
+    {"id":3,"title":"寂静的午后","artist":"王若","description":"水彩作品，光线透过百叶窗洒在木质桌面上。","price":2200,"style":"水彩","tags":["风景"],"year":2023,"size":"40×55cm","material":"纸本水彩","thumbnail":"https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&fit=crop"]},
+    {"id":4,"title":"梦境碎片","artist":"赵一","description":"综合材料拼贴，探索潜意识中的记忆碎片。","price":6800,"style":"抽象","tags":["抽象","人物"],"year":2024,"size":"100×100cm","material":"布面综合材料","thumbnail":"https://images.unsplash.com/photo-1561839561-b13bcfea3a87?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1561839561-b13bcfea3a87?w=1200&fit=crop"]},
+    {"id":5,"title":"海的记忆","artist":"林溪","description":"大幅油画，捕捉海浪拍打礁石的力量与美感。","price":8500,"style":"油画","tags":["风景"],"year":2024,"size":"120×150cm","material":"布面油画","thumbnail":"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&fit=crop"]},
+    {"id":6,"title":"春之序曲","artist":"李蔓","description":"花卉系列，水彩与水墨的结合。","price":2600,"style":"水彩","tags":["花卉"],"year":2023,"size":"50×60cm","material":"纸本水彩","thumbnail":"https://images.unsplash.com/photo-1471899236350-e3016bf1e69e?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1471899236350-e3016bf1e69e?w=1200&fit=crop"]},
+    {"id":7,"title":"都市剪影","artist":"陈微","description":"城市题材丙烯画，展现高楼间的光影交错。","price":4500,"style":"丙烯","tags":["城市"],"year":2024,"size":"80×100cm","material":"布面丙烯","thumbnail":"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&fit=crop"]},
+    {"id":8,"title":"静谧时光","artist":"王若","description":"居家一角静物水彩，温暖的阳光洒落。","price":1800,"style":"水彩","tags":["静物"],"year":2023,"size":"35×45cm","material":"纸本水彩","thumbnail":"https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1513519245088-0e12902e35ca?w=1200&fit=crop"]},
+    {"id":9,"title":"星河流淌","artist":"赵一","description":"抽象表现主义，探索宇宙与内心的关系。","price":7200,"style":"抽象","tags":["抽象"],"year":2024,"size":"100×120cm","material":"布面综合材料","thumbnail":"https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=1200&fit=crop"]},
+    {"id":10,"title":"秋日私语","artist":"李蔓","description":"暖色调风景油画，秋天林间的光影。","price":3500,"style":"油画","tags":["风景"],"year":2023,"size":"70×90cm","material":"布面油画","thumbnail":"https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200&fit=crop"]},
+    {"id":11,"title":"人物肖像","artist":"林溪","description":"素描人物肖像，细腻的线条表达。","price":1500,"style":"素描","tags":["人物"],"year":2024,"size":"30×40cm","material":"纸本素描","thumbnail":"https://images.unsplash.com/photo-1579781354182-a33c535aa9b9?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1579781354182-a33c535aa9b9?w=1200&fit=crop"]},
+    {"id":12,"title":"花园漫步","artist":"李蔓","description":"印象派风格花卉油画。","price":4200,"style":"油画","tags":["花卉"],"year":2024,"size":"60×80cm","material":"布面油画","thumbnail":"https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200&fit=crop"]},
+    {"id":13,"title":"远山的呼唤","artist":"陈微","description":"大幅风景油画，壮丽的自然风光。","price":9800,"style":"油画","tags":["风景"],"year":2024,"size":"150×180cm","material":"布面油画","thumbnail":"https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop","images":["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&fit=crop"]}
+  ]
 };
 
-const ADMIN_PWD = 'admin888';
-
-/* ============================================================
+/* =============================================================
    全局状态
-   ============================================================ */
+   ============================================================= */
 let artworks = [];
-let siteConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-let isAdmin = false;
+let siteConfig = {};
+let currentDetailIdx = -1;
+let filteredArtworks = [];
 let toastTimer = null;
+let _githubSha = null;
 
-/* ============================================================
-   DOM 引用
-   ============================================================ */
 const $ = id => document.getElementById(id);
 
-/* ============================================================
-   Toast
-   ============================================================ */
-function toast(msg, type) {
-  const el = $('toast');
-  el.textContent = msg;
-  el.className = 'toast ' + type + ' show';
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.className = 'toast'; }, 2000);
-}
+/* =============================================================
+   粒子系统 (Canvas 2D)
+   ============================================================= */
+(function(){
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [], animId;
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+  const count = isMobile ? 25 : 55;
 
-/* ============================================================
-   数据加载与保存
-   ============================================================ */
-var _githubSha = null;
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+  window.addEventListener('resize',resize);
+  resize();
 
-async function loadData() {
-  var fromRemote = false;
-  var cached = localStorage.getItem('art_gallery_cache');
-  if (cached) {
-    try {
-      var d = JSON.parse(cached);
-      if (d.siteConfig) siteConfig = Object.assign(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), d.siteConfig);
-      if (d.artworks) artworks = d.artworks;
-    } catch(e) {}
+  class Particle{
+    constructor(){
+      this.reset();
+      this.y = Math.random() * canvas.height; // start at random y
+    }
+    reset(){
+      this.x = Math.random() * canvas.width;
+      this.y = -10;
+      this.size = Math.random() * 2.5 + .5;
+      this.speedY = Math.random() * .4 + .1;
+      this.speedX = (Math.random() - .5) * .3;
+      this.opacity = Math.random() * .35 + .05;
+      this.color = Math.random() > .6 
+        ? `rgba(201,169,110,${this.opacity})`
+        : `rgba(212,184,150,${this.opacity})`;
+    }
+    update(){
+      this.y += this.speedY;
+      this.x += this.speedX + Math.sin(this.y * .02) * .15;
+      if(this.y > canvas.height + 10){this.reset();this.y=-10}
+      if(this.x > canvas.width + 10) this.x = -10;
+      if(this.x < -10) this.x = canvas.width + 10;
+    }
+    draw(){
+      ctx.beginPath();
+      ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+      ctx.fillStyle = this.color;
+      ctx.fill();
+    }
   }
-  try {
-    var r = await fetch(API_URL, { cache: 'no-cache' });
-    if (r.ok) {
-      var data = await r.json();
-      if (data.siteConfig) siteConfig = Object.assign(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), data.siteConfig);
-      if (data.artworks) artworks = data.artworks;
-      localStorage.setItem('art_gallery_cache', JSON.stringify(data));
+
+  for(let i=0;i<count;i++) particles.push(new Particle());
+
+  function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{p.update();p.draw()});
+    // subtle connections
+    for(let i=0;i<particles.length;i+=4){
+      for(let j=i+1;j<particles.length;j+=4){
+        const d = Math.hypot(particles[i].x-particles[j].x,particles[i].y-particles[j].y);
+        if(d < 120){
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle = `rgba(201,169,110,${.04*(1-d/120)})`;
+          ctx.stroke();
+        }
+      }
+    }
+    animId = requestAnimationFrame(animate);
+  }
+  animate();
+
+  // Pause when not visible
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){cancelAnimationFrame(animId);animId=null}
+    else if(!animId){animate()}
+  });
+})();
+
+/* =============================================================
+   数据加载
+   ============================================================= */
+async function loadData(){
+  let fromRemote = false;
+  const cached = localStorage.getItem('art_gallery_cache');
+  if(cached){try{
+    const d = JSON.parse(cached);
+    if(d.siteConfig) siteConfig = d.siteConfig;
+    if(d.artworks) artworks = d.artworks;
+  }catch(e){}}
+  try{
+    const r = await fetch(API_URL,{cache:'no-cache'});
+    if(r.ok){
+      const data = await r.json();
+      if(data.siteConfig) siteConfig = data.siteConfig;
+      if(data.artworks) artworks = data.artworks;
+      localStorage.setItem('art_gallery_cache',JSON.stringify(data));
       fromRemote = true;
     }
-  } catch(e) { console.warn('Fetch failed:', e.message); }
-  if (artworks.length === 0 && typeof EMBEDDED_DATA !== 'undefined') {
-    if (EMBEDDED_DATA.siteConfig) siteConfig = Object.assign(JSON.parse(JSON.stringify(DEFAULT_CONFIG)), EMBEDDED_DATA.siteConfig);
-    if (EMBEDDED_DATA.artworks) artworks = EMBEDDED_DATA.artworks;
+  }catch(e){console.warn('Fetch failed:',e.message)}
+  if(artworks.length===0 && EMBEDDED_DATA){
+    if(EMBEDDED_DATA.siteConfig) siteConfig = EMBEDDED_DATA.siteConfig;
+    if(EMBEDDED_DATA.artworks) artworks = EMBEDDED_DATA.artworks;
   }
   return fromRemote;
 }
 
-async function saveData() {
-  var data = { siteConfig: siteConfig, artworks: artworks };
-  localStorage.setItem('art_gallery_cache', JSON.stringify(data));
-  try {
-    if (!_githubSha) {
-      var metaRes = await fetch(GITHUB_API, { headers: { Authorization: 'token ' + GITHUB_TOKEN } });
-      if (metaRes.ok) {
-        var meta = await metaRes.json();
-        _githubSha = meta.sha;
-      } else {
-        throw new Error('Failed to get file metadata: ' + metaRes.status);
-      }
-    }
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-    var putRes = await fetch(GITHUB_API, {
-      method: 'PUT',
-      headers: {
-        Authorization: 'token ' + GITHUB_TOKEN,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message: 'Update gallery data', content: content, sha: _githubSha })
-    });
-    if (putRes.ok) {
-      var putData = await putRes.json();
-      _githubSha = putData.content ? putData.content.sha : null;
-      console.log('Data synced to GitHub');
-    } else if (putRes.status === 409) {
-      _githubSha = null;
-      return saveData();
-    } else {
-      throw new Error('Put failed: ' + putRes.status);
-    }
-  } catch(e) {
-    console.warn('GitHub sync failed:', e.message);
-    _githubSha = null;
+/* =============================================================
+   页面渲染
+   ============================================================= */
+function applyConfig(){
+  const c = siteConfig;
+  if(c.siteName){
+    document.title = c.siteName + ' — 艺术画廊';
+    $('heroTitle').textContent = c.siteName;
+    document.querySelector('.nav-logo').textContent = c.siteName;
   }
-  return true;
+  if(c.subtitle) $('heroSubtitle').textContent = c.subtitle;
+  if(c.tagline) $('heroTagline').textContent = c.tagline;
+  if(c.aboutTitle) $('aboutTitle').textContent = c.aboutTitle;
+  if(c.aboutContent) $('aboutText').textContent = c.aboutContent;
+  if(c.footerText) $('footerText').textContent = c.footerText;
+
+  const cols = c.colors || {};
+  if(cols.bg) document.documentElement.style.setProperty('--bg',cols.bg);
+  if(cols.card) document.documentElement.style.setProperty('--card',cols.card);
+  if(cols.text) document.documentElement.style.setProperty('--text',cols.text);
+  if(cols.text2) document.documentElement.style.setProperty('--text2',cols.text2);
+  if(cols.border) document.documentElement.style.setProperty('--border',cols.border);
+  if(cols.accent) document.documentElement.style.setProperty('--accent',cols.accent);
+  if(cols.accent2) document.documentElement.style.setProperty('--accent2',cols.accent2);
+  if(cols.warm) document.documentElement.style.setProperty('--warm',cols.warm);
+  if(cols.gold) document.documentElement.style.setProperty('--gold',cols.gold);
 }
 
-/* ============================================================
-   风格下拉
-   ============================================================ */
-function rebuildStyleFilter() {
-  const sel = $('styleFilter');
-  const current = sel.value;
-  const styles = ['油画','水彩','素描','抽象','写实','风景','人物','静物'];
-  sel.innerHTML = '<option value="">全部风格</option>';
-  styles.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s; opt.textContent = s; sel.appendChild(opt);
+function buildFilterOptions(){
+  const styles = [...new Set(artworks.map(a=>a.style).filter(Boolean))].sort();
+  const artists = [...new Set(artworks.map(a=>a.artist).filter(Boolean))].sort();
+  ['styleFilter','artistFilter'].forEach((id,idx)=>{
+    const sel = $(id), vals = idx===0?styles:artists;
+    const current = sel.value;
+    sel.innerHTML = idx===0?'<option value="">全部风格</option>':'<option value="">全部艺术家</option>';
+    vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;sel.appendChild(o)});
+    sel.value = current;
   });
-  sel.value = current;
 }
 
-/* ============================================================
-   渲染画廊
-   ============================================================ */
-function render() {
-  const q = ($('searchInput').value || '').trim().toLowerCase();
+function filterArtworks(){
+  const search = ($('searchInput').value||'').toLowerCase().trim();
   const style = $('styleFilter').value;
-  const min = parseFloat($('priceMin').value) || 0;
-  const max = parseFloat($('priceMax').value) || Infinity;
+  const artist = $('artistFilter').value;
+  const pMin = parseFloat($('priceMin').value)||0;
+  const pMax = parseFloat($('priceMax').value)||Infinity;
 
-  const filtered = artworks.filter(a => {
-    if (q) {
-      const inTitle = (a.title || '').toLowerCase().includes(q);
-      const inArtist = (a.artist || '').toLowerCase().includes(q);
-      const inDesc = (a.description || '').toLowerCase().includes(q);
-      if (!inTitle && !inArtist && !inDesc) return false;
-    }
-    if (style) {
-      if (a.style !== style && !(a.tags || []).some(t => t === style)) return false;
-    }
-    if ((a.price || 0) < min || (a.price || 0) > max) return false;
+  filteredArtworks = artworks.filter(a=>{
+    if(search && !(a.title||'').toLowerCase().includes(search) && !(a.artist||'').toLowerCase().includes(search) && !(a.style||'').toLowerCase().includes(search)) return false;
+    if(style && a.style !== style) return false;
+    if(artist && a.artist !== artist) return false;
+    const p = a.price||0;
+    if(p < pMin || p > pMax) return false;
     return true;
   });
 
-  $('resultCount').textContent = '共 ' + filtered.length + ' 件作品';
+  $('resultCount').textContent = filteredArtworks.length === artworks.length
+    ? `共 ${artworks.length} 件作品`
+    : `筛选结果：${filteredArtworks.length} / ${artworks.length} 件`;
+}
 
-  if (filtered.length === 0) {
-    $('gallery').innerHTML = '<div class="empty-state"><p>没有找到匹配的作品</p></div>';
-    return;
-  }
-
-  const img = a => a.thumbnail || (a.images && a.images[0]) || '';
-  $('gallery').innerHTML = filtered.map(a => `
-    <div class="card" data-id="${a.id}">
+function renderGallery(){
+  const grid = $('gallery');
+  const buyText = siteConfig.buyBtnText || '小红书购买';
+  
+  grid.innerHTML = filteredArtworks.map((a,i)=>{
+    const origIdx = artworks.indexOf(a);
+    return `
+    <div class="card reveal" data-idx="${origIdx}" style="--mx:50%;--my:50%" onmousemove="cardMouseMove(event,this)" onmouseleave="cardMouseLeave(this)" ontouchmove="cardTouchMove(event,this)" ontouchend="cardTouchEnd(this)" onclick="openDetail(${origIdx})">
       <div class="card-img-wrap">
-        <img class="card-img" src="${img(a)}" alt="${a.title||''}" loading="lazy"
-          onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22><rect fill=%22%23ede6dc%22 width=%22400%22 height=%22400%22/><text fill=%22%23999%22 x=%22120%22 y=%22250%22 font-size=%2218%22>暂无图片</text></svg>'">
+        <img class="card-img" src="${a.thumbnail||a.images?.[0]||''}" alt="${a.title}" loading="lazy" onload="this.style.opacity=1" style="opacity:0;transition:opacity .5s">
       </div>
       <div class="card-body">
+        <div class="card-meta">${a.artist||''} <span class="dot"></span> ${a.year||''}</div>
         <div class="card-title">${a.title||''}</div>
-        <div class="card-meta">${a.artist||''}${a.year?' · '+a.year:''}</div>
         <div class="card-footer">
-          <span class="card-price">¥${(a.price||0).toLocaleString()}</span>
+          <span class="card-price">${a.price||0}</span>
           <span class="card-style">${a.style||''}</span>
         </div>
       </div>
-    </div>
-  `).join('');
+    </div>`
+  }).join('');
 
-  document.querySelectorAll('.card').forEach(el => {
-    el.addEventListener('click', () => {
-      const a = artworks.find(x => String(x.id) === el.dataset.id);
-      if (a) showDetail(a);
-    });
-  });
+  // re-apply reveal observers
+  observeScrollReveal();
 }
 
-/* ============================================================
+/* =============================================================
+   卡片交互 — 鼠标追光 + 3D倾斜
+   ============================================================= */
+function cardMouseMove(e, card){
+  const rect = card.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const cx = rect.width / 2, cy = rect.height / 2;
+  const rx = (y - cy) / cy * -6;
+  const ry = (x - cx) / cx * 6;
+  card.style.setProperty('--mx', x + 'px');
+  card.style.setProperty('--my', y + 'px');
+  card.style.transform = `perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.03,1.03,1.03)`;
+}
+
+function cardMouseLeave(card){
+  card.style.transform = '';
+  card.style.setProperty('--mx','50%');
+  card.style.setProperty('--my','50%');
+}
+
+function cardTouchMove(e, card){
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = card.getBoundingClientRect();
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+  const cx = rect.width / 2, cy = rect.height / 2;
+  const rx = (y - cy) / cy * -4;
+  const ry = (x - cx) / cx * 4;
+  card.classList.add('tilting','touch-active');
+  card.style.setProperty('--mx', x + 'px');
+  card.style.setProperty('--my', y + 'px');
+  card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02,1.02,1.02)`;
+}
+
+function cardTouchEnd(card){
+  card.classList.remove('tilting','touch-active');
+  card.style.transform = '';
+  card.style.setProperty('--mx','50%');
+  card.style.setProperty('--my','50%');
+}
+
+/* =============================================================
    详情弹窗
-   ============================================================ */
-function showDetail(a) {
-  $('detailImg').src = (a.images && a.images[0]) || a.thumbnail || '';
-  $('detailTitle').textContent = a.title || '';
-  $('detailArtist').textContent = (a.artist||'') + (a.year?' · ' + a.year:'');
-  const desc = a.description || '';
-  $('detailDesc').textContent = desc.length > 150 ? desc.slice(0,150)+'…' : desc;
+   ============================================================= */
+function openDetail(idx){
+  if(idx<0 || idx>=artworks.length) return;
+  currentDetailIdx = idx;
+  const a = artworks[idx];
+  const buyText = siteConfig.buyBtnText || '小红书购买';
+  const buyLink = a.wechatLink || '#';
 
-  const meta = [];
-  if (a.size) meta.push('<span class="label">尺寸</span><span class="value">'+a.size+'</span>');
-  if (a.material) meta.push('<span class="label">材质</span><span class="value">'+a.material+'</span>');
-  if (a.style) meta.push('<span class="label">风格</span><span class="value">'+a.style+'</span>');
-  if (a.tags&&a.tags.length) meta.push('<span class="label">标签</span><span class="value">'+a.tags.join('、')+'</span>');
-  $('detailMeta').innerHTML = meta.join('');
-
-  $('detailPrice').textContent = '¥' + (a.price||0).toLocaleString();
-  const buyBtn = $('detailBuy');
-  buyBtn.href = a.wechatLink || '#';
-  var btnText = siteConfig.buyBtnText || '小红书购买';
-  buyBtn.textContent = a.wechatLink ? btnText : '咨询购买（暂无链接）';
-  buyBtn.style.pointerEvents = a.wechatLink ? 'auto' : 'none';
+  $('detailCard').innerHTML = `
+    <img class="detail-img" src="${a.images?.[0]||a.thumbnail||''}" alt="${a.title}">
+    <div class="detail-info">
+      <div class="detail-artist">${a.artist||''} — ${a.year||''}</div>
+      <h2 class="detail-title">${a.title||''}</h2>
+      <div class="detail-meta">
+        <span>${a.style||''}</span>
+        <span>${a.size||''}</span>
+        <span>${a.material||''}</span>
+      </div>
+      <div class="detail-price">${a.price||0}</div>
+      <p class="detail-desc">${a.description||''}</p>
+      <a class="detail-buy" href="${buyLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${buyText}</a>
+    </div>`;
 
   $('detailOverlay').classList.add('active');
+  $('detailPrev').style.visibility = currentDetailIdx > 0 ? 'visible' : 'hidden';
+  $('detailNext').style.visibility = currentDetailIdx < artworks.length-1 ? 'visible' : 'hidden';
+  document.body.style.overflow = 'hidden';
 }
 
-/* ============================================================
-   应用配置
-   ============================================================ */
-function applyConfig(cfg) {
-  const c = cfg || siteConfig;
-  document.title = (c.siteName||'画廊') + ' — 艺术画廊';
-  $('siteName').textContent = c.siteName || '';
-  $('subtitle').textContent = c.subtitle || '';
-  $('tagline').textContent = c.tagline || '';
-  $('aboutModalTitle').textContent = c.aboutTitle || '关于画廊';
-  $('aboutModalContent').textContent = c.aboutContent || '';
-  $('footer').textContent = c.footerText || '';
-  if (c.logo) {
-    $('siteName').innerHTML = '<img src="'+c.logo+'" style="height:36px;vertical-align:middle" alt="logo">';
-  }
-  if (c.colors) {
-    const root = document.documentElement;
-    Object.entries(c.colors).forEach(([k,v]) => {
-      if (v) root.style.setProperty('--'+k, v);
-    });
-  }
+function closeDetail(e){
+  if(e && e.target !== e.currentTarget && !e.target.classList.contains('detail-close')) return;
+  $('detailOverlay').classList.remove('active');
+  currentDetailIdx = -1;
+  document.body.style.overflow = '';
 }
 
-/* ============================================================
-   管理后台 — 登录
-   ============================================================ */
-$('adminLink').addEventListener('click', () => {
-  // Reset admin state on open
-  $('adminLogin').style.display = 'flex';
-  $('adminContent').style.display = 'none';
-  $('adminPwd').value = '';
-  isAdmin = false;
-  $('adminOverlay').classList.add('active');
-});
+function prevArtwork(e){e.stopPropagation();openDetail(currentDetailIdx-1)}
+function nextArtwork(e){e.stopPropagation();openDetail(currentDetailIdx+1)}
 
-$('adminLoginBtn').addEventListener('click', () => {
-  if ($('adminPwd').value === ADMIN_PWD) {
-    isAdmin = true;
-    $('adminLogin').style.display = 'none';
-    $('adminContent').style.display = 'block';
-    loadAdminData();
-    toast('管理后台已解锁', 'ok');
-  } else {
-    toast('密码错误', 'err');
+document.addEventListener('keydown',e=>{
+  if($('detailOverlay').classList.contains('active')){
+    if(e.key==='Escape') closeDetail();
+    if(e.key==='ArrowLeft') prevArtwork(e);
+    if(e.key==='ArrowRight') nextArtwork(e);
   }
 });
 
-$('adminPwd').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') $('adminLoginBtn').click();
-});
+/* =============================================================
+   统计计数动画
+   ============================================================= */
+function animateNumbers(){
+  const works = artworks.length;
+  const artists = new Set(artworks.map(a=>a.artist).filter(Boolean)).size;
+  const styles = new Set(artworks.map(a=>a.style).filter(Boolean)).size;
+  const prices = artworks.map(a=>a.price||0).filter(p=>p>0);
+  const avgPrice = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
 
-$('adminClose').addEventListener('click', () => $('adminOverlay').classList.remove('active'));
-$('logoutBtn').addEventListener('click', () => {
-  isAdmin = false;
-  $('adminOverlay').classList.remove('active');
-  toast('已退出管理后台', 'info');
-});
-
-// Tab switching
-document.querySelectorAll('.admin-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    $('panel-' + tab.dataset.tab).classList.add('active');
-  });
-});
-
-/* ============================================================
-   作品管理面板
-   ============================================================ */
-function loadAdminData() {
-  renderArtworkList();
-  loadSettingsForm();
-  buildColorPicker();
+  animateCounter('statWorks',0,works,1000);
+  animateCounter('statArtists',0,artists,1000);
+  animateCounter('statStyles',0,styles,1000);
+  animateCounter('statAvgPrice',0,avgPrice,1000);
 }
 
-function renderArtworkList() {
-  const list = $('artworkList');
-  if (artworks.length === 0) {
-    list.innerHTML = '<p style="color:var(--text2);font-size:13px">暂无作品，请添加</p>';
-    return;
+function animateCounter(id,from,to,duration){
+  const el = document.getElementById(id);
+  const start = performance.now();
+  function update(now){
+    const elapsed = now - start;
+    const progress = Math.min(elapsed/duration,1);
+    const eased = 1 - Math.pow(1-progress,3);
+    const val = Math.round(from + (to-from) * eased);
+    el.textContent = val;
+    if(progress<1) requestAnimationFrame(update);
   }
-  list.innerHTML = artworks.map((a,i) => `
-    <div class="artwork-item">
-      <span class="title">${a.title||'未命名'} — ${a.artist||''}</span>
-      <span class="price">¥${(a.price||0).toLocaleString()}</span>
-      <div class="btns">
-        <button data-edit="${i}">编辑</button>
-        <button class="del" data-del="${i}">删除</button>
-      </div>
-    </div>
-  `).join('');
-
-  list.querySelectorAll('[data-edit]').forEach(btn => {
-    btn.addEventListener('click', () => editArtwork(parseInt(btn.dataset.edit)));
-  });
-  list.querySelectorAll('[data-del]').forEach(btn => {
-    btn.addEventListener('click', () => deleteArtwork(parseInt(btn.dataset.del)));
-  });
+  requestAnimationFrame(update);
 }
 
-function editArtwork(idx) {
-  const a = artworks[idx];
-  $('f_editId').value = idx;
-  $('editTitle').textContent = '编辑作品';
-  $('f_title').value = a.title || '';
-  $('f_artist').value = a.artist || '';
-  $('f_style').value = a.style || '';
-  $('f_year').value = a.year || '';
-  $('f_price').value = a.price || '';
-  $('f_size').value = a.size || '';
-  $('f_material').value = a.material || '';
-  $('f_image').value = (a.images&&a.images[0]) || a.thumbnail || '';
-  $('f_wechatLink').value = a.wechatLink || '';
-  $('f_description').value = a.description || '';
-  $('f_tags').value = (a.tags||[]).join(', ');
-  $('cancelEditBtn').style.display = 'inline-block';
-}
-
-function resetForm() {
-  $('f_editId').value = '';
-  $('editTitle').textContent = '添加作品';
-  ['f_title','f_artist','f_style','f_year','f_price','f_size','f_material','f_image','f_wechatLink','f_description','f_tags'].forEach(id => {
-    $(id).value = '';
-  });
-  $('cancelEditBtn').style.display = 'none';
-  $('f_imageFile').value = '';
-}
-
-$('cancelEditBtn').addEventListener('click', resetForm);
-
-$('saveBtn').addEventListener('click', async () => {
-  const artwork = {
-    id: '',
-    title: $('f_title').value.trim(),
-    artist: $('f_artist').value.trim(),
-    style: $('f_style').value,
-    year: parseInt($('f_year').value) || null,
-    price: parseFloat($('f_price').value) || 0,
-    size: $('f_size').value.trim(),
-    material: $('f_material').value.trim(),
-    images: [],
-    thumbnail: '',
-    wechatLink: $('f_wechatLink').value.trim(),
-    description: $('f_description').value.trim(),
-    tags: ($('f_tags').value||'').split(',').map(s=>s.trim()).filter(Boolean),
-  };
-
-  const imgUrl = $('f_image').value.trim();
-  if (imgUrl) { artwork.images = [imgUrl]; artwork.thumbnail = imgUrl; }
-
-  if (!artwork.title) { toast('请输入作品名称', 'err'); return; }
-  if (!artwork.price && artwork.price !== 0) { toast('请输入价格', 'err'); return; }
-
-  const editIdx = $('f_editId').value;
-  if (editIdx !== '') {
-    artworks[parseInt(editIdx)] = Object.assign(artworks[parseInt(editIdx)], artwork);
-  } else {
-    artwork.id = Date.now().toString(36) + Math.random().toString(36).slice(2,7);
-    artworks.push(artwork);
-  }
-
-  if (await saveData()) {
-    toast('作品已保存', 'ok');
-    resetForm();
-    renderArtworkList();
-    render();
-    rebuildStyleFilter();
-  }
-});
-
-function deleteArtwork(idx) {
-  if (!confirm('确定删除「' + (artworks[idx].title||'未命名') + '」？')) return;
-  artworks.splice(idx, 1);
-  saveData().then(() => {
-    renderArtworkList();
-    render();
-    rebuildStyleFilter();
-    toast('已删除', 'info');
-  });
-}
-
-/* ============================================================
-   图片文件上传 (Base64)
-   ============================================================ */
-$('f_imageFile').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    $('f_image').value = ev.target.result;
-  };
-  reader.readAsDataURL(file);
-});
-
-/* ============================================================
-   网站设置面板
-   ============================================================ */
-function loadSettingsForm() {
-  const c = siteConfig;
-  $('s_siteName').value = c.siteName || '';
-  $('s_subtitle').value = c.subtitle || '';
-  $('s_tagline').value = c.tagline || '';
-  $('s_aboutTitle').value = c.aboutTitle || '';
-  $('s_aboutContent').value = c.aboutContent || '';
-  $('s_footerText').value = c.footerText || '';
-  $('s_logo').value = c.logo || '';
-  $('s_buyBtnText').value = c.buyBtnText || '小红书购买';
-}
-
-function buildColorPicker() {
-  const row = $('colorPickerRow');
-  const colors = siteConfig.colors || {};
-  const labels = { bg:'页面背景', card:'卡片背景', text:'主文字', text2:'次文字', border:'边框', accent:'强调色', warm:'暖色' };
-  let html = '';
-  Object.keys(labels).forEach(key => {
-    html += `<label>${labels[key]} <input type="color" data-color="${key}" value="${colors[key]||''}"></label>`;
-  });
-  row.innerHTML = html;
-}
-
-$('saveSettings').addEventListener('click', async () => {
-  siteConfig.siteName = $('s_siteName').value.trim();
-  siteConfig.subtitle = $('s_subtitle').value.trim();
-  siteConfig.tagline = $('s_tagline').value.trim();
-  siteConfig.aboutTitle = $('s_aboutTitle').value.trim();
-  siteConfig.aboutContent = $('s_aboutContent').value.trim();
-  siteConfig.footerText = $('s_footerText').value.trim();
-  siteConfig.logo = $('s_logo').value.trim();
-  siteConfig.buyBtnText = $('s_buyBtnText').value.trim() || '小红书购买';
-  siteConfig.colors = siteConfig.colors || {};
-  document.querySelectorAll('#colorPickerRow input[type=color]').forEach(el => {
-    siteConfig.colors[el.dataset.color] = el.value;
-  });
-  if (await saveData()) {
-    applyConfig(siteConfig);
-    toast('设置已保存', 'ok');
-    loadAdminData();
-  }
-});
-
-/* ============================================================
-   数据备份
-   ============================================================ */
-$('exportBtn').addEventListener('click', () => {
-  const data = { siteConfig, artworks, exportedAt: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'art-gallery-backup-' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('数据已导出', 'ok');
-});
-
-$('importFile').addEventListener('change', async function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (!confirm('恢复数据将覆盖当前所有内容，确认？')) { this.value = ''; return; }
-  const reader = new FileReader();
-  reader.onload = async function(ev) {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (data.artworks) artworks = data.artworks;
-      if (data.siteConfig) siteConfig = data.siteConfig;
-      if (await saveData()) {
-        applyConfig(siteConfig);
-        loadAdminData();
-        rebuildStyleFilter();
-        render();
-        toast('数据已恢复 (' + artworks.length + ' 件作品)', 'ok');
+/* =============================================================
+   滚动入场动画 (IntersectionObserver)
+   ============================================================= */
+function observeScrollReveal(){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
       }
-    } catch (err) {
-      toast('JSON 格式错误', 'err');
-    }
-    e.target.value = '';
-  };
-  reader.readAsText(file);
+    });
+  },{threshold:0.15,rootMargin:'0px 0px -40px 0px'});
+
+  document.querySelectorAll('.reveal:not(.visible)').forEach(el=>observer.observe(el));
+}
+
+/* =============================================================
+   导航栏滚动效果
+   ============================================================= */
+let lastScrollY = 0;
+window.addEventListener('scroll',()=>{
+  const nav = $('siteNav');
+  const bar = $('filterBar');
+  const scrollY = window.scrollY;
+
+  if(scrollY > lastScrollY && scrollY > 200){
+    nav.classList.add('hidden');
+  }else{
+    nav.classList.remove('hidden');
+  }
+  if(scrollY > 10) nav.classList.add('shadow');
+  else nav.classList.remove('shadow');
+  if(scrollY > 60 && bar) bar.classList.add('scrolled');
+  else if(bar) bar.classList.remove('scrolled');
+
+  lastScrollY = scrollY;
+},{passive:true});
+
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  // close mobile menu
+  $('navLinks').classList.remove('open');
+}
+
+/* =============================================================
+   手机菜单
+   ============================================================= */
+$('navToggle').addEventListener('click',()=>{
+  $('navLinks').classList.toggle('open');
 });
 
-/* ============================================================
-   弹窗事件
-   ============================================================ */
-$('detailClose').addEventListener('click', () => $('detailOverlay').classList.remove('active'));
-$('detailOverlay').addEventListener('click', e => {
-  if (e.target === $('detailOverlay')) $('detailOverlay').classList.remove('active');
+/* =============================================================
+   筛选事件
+   ============================================================= */
+['searchInput','styleFilter','artistFilter'].forEach(id=>{
+  $(id).addEventListener('input',()=>{filterArtworks();renderGallery()});
+  $(id).addEventListener('change',()=>{filterArtworks();renderGallery()});
 });
-
-$('aboutLink').addEventListener('click', () => $('aboutOverlay').classList.add('active'));
-$('aboutClose').addEventListener('click', () => $('aboutOverlay').classList.remove('active'));
-$('aboutOverlay').addEventListener('click', e => {
-  if (e.target === $('aboutOverlay')) $('aboutOverlay').classList.remove('active');
+['priceMin','priceMax'].forEach(id=>{
+  $(id).addEventListener('input',()=>{filterArtworks();renderGallery()});
 });
-
-$('adminOverlay').addEventListener('click', e => {
-  if (e.target === $('adminOverlay')) $('adminOverlay').classList.remove('active');
-});
-
-/* ============================================================
-   搜索过滤事件
-   ============================================================ */
-$('searchInput').addEventListener('input', render);
-$('styleFilter').addEventListener('change', render);
-$('priceMin').addEventListener('input', render);
-$('priceMax').addEventListener('input', render);
-$('resetBtn').addEventListener('click', () => {
+$('resetBtn').addEventListener('click',()=>{
   $('searchInput').value = '';
   $('styleFilter').value = '';
+  $('artistFilter').value = '';
   $('priceMin').value = '';
   $('priceMax').value = '';
-  render();
+  filterArtworks();
+  renderGallery();
 });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    $('detailOverlay').classList.remove('active');
-    $('aboutOverlay').classList.remove('active');
-  }
+/* =============================================================
+   Toast
+   ============================================================= */
+function toast(msg,type){
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + (type||'') + ' show';
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>el.className='toast',2000);
+}
+
+/* =============================================================
+   触摸涟漪效果（卡片点击反馈）
+   ============================================================= */
+document.addEventListener('click',function(e){
+  const card = e.target.closest('.card');
+  if(!card) return;
+  const ripple = document.createElement('div');
+  ripple.className = 'ripple';
+  const rect = card.getBoundingClientRect();
+  const size = Math.max(rect.width,rect.height);
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+  card.appendChild(ripple);
+  ripple.addEventListener('animationend',()=>ripple.remove());
 });
 
-/* ============================================================
-   启动
-   ============================================================ */
-async function init() {
-  const fromRemote = await loadData();
-  applyConfig(siteConfig);
-  rebuildStyleFilter();
-  render();
-  if (!fromRemote && artworks.length > 0) {
-    toast('使用本地缓存数据', 'info');
+/* =============================================================
+   手机陀螺仪视差（可选，需用户授权）
+   ============================================================= */
+if(/Mobi|Android/i.test(navigator.userAgent) && window.DeviceOrientationEvent){
+  let gyroActive = false;
+  window.addEventListener('deviceorientation',e=>{
+    if(!gyroActive) return;
+    const beta = Math.min(Math.max(e.beta||0,-15),15);
+    const gamma = Math.min(Math.max(e.gamma||0,-15),15);
+    document.querySelectorAll('.card:not(:hover)').forEach(card=>{
+      card.style.transform = `perspective(600px) rotateX(${beta*.2}deg) rotateY(${gamma*.2}deg)`;
+    });
+  });
+
+  // iOS 13+ requires permission
+  if(typeof DeviceOrientationEvent.requestPermission === 'function'){
+    // silent, don't auto-request
+  }else{
+    gyroActive = true;
   }
 }
-init();
+
+/* =============================================================
+   手势滑动（详情弹窗左右切换）
+   ============================================================= */
+let touchStartX = 0;
+document.addEventListener('touchstart',function(e){
+  if($('detailOverlay').classList.contains('active')){
+    touchStartX = e.touches[0].clientX;
+  }
+},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(!$('detailOverlay').classList.contains('active')) return;
+  const diff = (e.changedTouches[0]?.clientX||0) - touchStartX;
+  if(Math.abs(diff) > 60){
+    if(diff < 0 && currentDetailIdx < artworks.length-1) nextArtwork(e);
+    else if(diff > 0 && currentDetailIdx > 0) prevArtwork(e);
+  }
+});
+
+/* =============================================================
+   启动
+   ============================================================= */
+async function init(){
+  const fromRemote = await loadData();
+  applyConfig();
+  buildFilterOptions();
+  filterArtworks();
+  renderGallery();
+  animateNumbers();
+  observeScrollReveal();
+
+  // Re-trigger stats animation when scrolled into view
+  const statsObserver = new IntersectionObserver((entries)=>{
+    if(entries[0].isIntersecting){animateNumbers();statsObserver.disconnect()}
+  });
+  statsObserver.observe($('stats'));
+
+  if(!fromRemote && artworks.length>0) toast('使用本地缓存数据','');
+}
+
+document.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>
