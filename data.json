@@ -1,0 +1,256 @@
+[
+  {
+    "id": 1,
+    "title": "暮色山峦",
+    "artist": "林溪",
+    "description": "油画布面作品，描绘黄昏时分群山层叠的静谧之美。暖色调与冷色调的交织呈现出时间流逝的诗意。",
+    "price": 3800,
+    "style": "油画",
+    "tags": [
+      "风景"
+    ],
+    "year": 2024,
+    "size": "80×100cm",
+    "material": "布面油画",
+    "thumbnail": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 2,
+    "title": "城市呼吸",
+    "artist": "陈微",
+    "description": "抽象丙烯画，以大胆的笔触和丰富的色彩表达都市的律动与生命力。",
+    "price": 5200,
+    "style": "抽象",
+    "tags": [
+      "抽象"
+    ],
+    "year": 2024,
+    "size": "90×120cm",
+    "material": "布面丙烯",
+    "thumbnail": "https://images.unsplash.com/photo-1549887534-1541e9326642?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1549887534-1541e9326642?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 3,
+    "title": "寂静的午后",
+    "artist": "王若",
+    "description": "水彩作品，光线透过百叶窗洒在木质桌面上，营造出宁静而温暖的氛围。",
+    "price": 2200,
+    "style": "水彩",
+    "tags": [
+      "风景"
+    ],
+    "year": 2023,
+    "size": "40×55cm",
+    "material": "纸本水彩",
+    "thumbnail": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 4,
+    "title": "梦境碎片",
+    "artist": "赵一",
+    "description": "综合材料拼贴，将超现实元素与日常物件结合，探索潜意识中的记忆碎片。",
+    "price": 6800,
+    "style": "抽象",
+    "tags": [
+      "抽象",
+      "人物"
+    ],
+    "year": 2024,
+    "size": "100×100cm",
+    "material": "布面综合材料",
+    "thumbnail": "https://images.unsplash.com/photo-1561839561-b13bcfea3a87?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1561839561-b13bcfea3a87?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 5,
+    "title": "生·息",
+    "artist": "林溪",
+    "description": "水墨风格的当代诠释，以黑白灰层次展现自然生命的循环与张力。",
+    "price": 4500,
+    "style": "素描",
+    "tags": [
+      "风景"
+    ],
+    "year": 2024,
+    "size": "60×80cm",
+    "material": "纸本水墨",
+    "thumbnail": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 6,
+    "title": "街角咖啡店",
+    "artist": "周远",
+    "description": "写实油画，描绘老街转角处的小咖啡馆，温暖灯光与行人交织出生活气息。",
+    "price": 3100,
+    "style": "写实",
+    "tags": [
+      "写实",
+      "风景"
+    ],
+    "year": 2023,
+    "size": "60×80cm",
+    "material": "布面油画",
+    "thumbnail": "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 7,
+    "title": "无题 #7",
+    "artist": "陈微",
+    "description": "极简主义丙烯作品，大面积的色块与留白探讨空间与感知的关系。",
+    "price": 7600,
+    "style": "抽象",
+    "tags": [
+      "抽象"
+    ],
+    "year": 2024,
+    "size": "120×150cm",
+    "material": "布面丙烯",
+    "thumbnail": "https://images.unsplash.com/photo-1574182245530-967d9b3831af?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1574182245530-967d9b3831af?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 8,
+    "title": "花事",
+    "artist": "方晴",
+    "description": "工笔花卉，细致勾勒出花朵盛放的姿态，色彩淡雅而富有生命力。",
+    "price": 2800,
+    "style": "水彩",
+    "tags": [
+      "静物"
+    ],
+    "year": 2024,
+    "size": "35×50cm",
+    "material": "纸本设色",
+    "thumbnail": "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 9,
+    "title": "夜的钢琴曲",
+    "artist": "王若",
+    "description": "水彩与墨水的结合，用流动的线条表现音乐与夜的融合。",
+    "price": 2600,
+    "style": "水彩",
+    "tags": [
+      "风景",
+      "人物"
+    ],
+    "year": 2023,
+    "size": "35×50cm",
+    "material": "纸本水彩",
+    "thumbnail": "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 10,
+    "title": "山海经·异兽",
+    "artist": "赵一",
+    "description": "系列作品之一，以当代插画语言重新诠释古典神话中的奇珍异兽。",
+    "price": 4200,
+    "style": "素描",
+    "tags": [
+      "人物",
+      "写实"
+    ],
+    "year": 2024,
+    "size": "50×70cm",
+    "material": "纸本素描",
+    "thumbnail": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1549490349-8643362247b5?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 11,
+    "title": "极光",
+    "artist": "林溪",
+    "description": "大尺幅抽象风景，以浓郁色彩表现极光在夜空中舞动的壮丽景象。",
+    "price": 8900,
+    "style": "油画",
+    "tags": [
+      "风景",
+      "抽象"
+    ],
+    "year": 2024,
+    "size": "150×200cm",
+    "material": "布面油画",
+    "thumbnail": "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 12,
+    "title": "人间烟火",
+    "artist": "周远",
+    "description": "系列纪实风格素描，记录市井生活中最真实动人的瞬间。",
+    "price": 1500,
+    "style": "写实",
+    "tags": [
+      "写实",
+      "人物"
+    ],
+    "year": 2023,
+    "size": "30×40cm",
+    "material": "纸本铅笔",
+    "thumbnail": "https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=400&h=400&fit=crop",
+    "images": [
+      "https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=1200&fit=crop"
+    ],
+    "wechatLink": ""
+  },
+  {
+    "id": 13,
+    "title": "于旷野中孤独",
+    "artist": "一条鱼",
+    "description": "作品构图比较简洁，着重大面积铺色，内容描述着寂静的画面，浓郁又明亮的色彩搭配却热情奔放，充满视觉冲击力",
+    "price": 200,
+    "style": "油画",
+    "tags": [
+      "抽象主义",
+      "表现主义"
+    ],
+    "year": 2026,
+    "size": "60x80cm",
+    "material": "油画",
+    "thumbnail": "/uploads/ef8a1284c16e4f3894a1bb17d9de3a08.jpg",
+    "images": [
+      "/uploads/ef8a1284c16e4f3894a1bb17d9de3a08.jpg"
+    ],
+    "wechatLink": "https://store.weixin.qq.com/shop/a/VvExzatv7nMhePp"
+  }
+]
