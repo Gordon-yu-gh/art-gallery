@@ -1,13 +1,13 @@
 {
   "siteConfig": {
-    "siteName": "林溪作品",
+    "siteName": "一在美术馆",
     "subtitle": "发现与收藏你喜爱的艺术作品",
     "tagline": "— 画 廊 —",
     "aboutTitle": "关于画廊",
     "aboutContent": "",
     "footerText": "",
     "logo": "",
-    "favicon": "",
+    "buyBtnText": "小红书购买",
     "colors": {
       "bg": "#f7f3ee",
       "card": "#fefcf9",
@@ -21,7 +21,8 @@
       "cardHover": "#fcfaf8",
       "shadow": "rgba(92,77,60,0.08)",
       "modalOverlay": "rgba(44,36,22,0.6)"
-    }
+    },
+    "favicon": ""
   },
   "artworks": [
     {
