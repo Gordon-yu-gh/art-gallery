@@ -26,7 +26,7 @@
   },
   "artworks": [
     {
-      "id": 1,
+      "id": "",
       "title": "暮色山峦",
       "artist": "林溪",
       "description": "油画布面作品，描绘黄昏时分群山层叠的静谧之美。暖色调与冷色调的交织呈现出时间流逝的诗意。",
@@ -38,11 +38,11 @@
       "year": 2024,
       "size": "80×100cm",
       "material": "布面油画",
-      "thumbnail": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=400&h=400&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&fit=crop",
       "images": [
         "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=1200&fit=crop"
       ],
-      "wechatLink": ""
+      "wechatLink": "https://xhslink.com/m/1xnFbXK9HdF"
     },
     {
       "id": 2,
