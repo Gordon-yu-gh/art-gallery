@@ -234,9 +234,9 @@
       "year": 2026,
       "size": "60x80cm",
       "material": "油画",
-      "thumbnail": "/uploads/ef8a1284c16e4f3894a1bb17d9de3a08.jpg",
+      "thumbnail": "https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/uploads/art-1783615046432-h1td8uz9455.jpg",
       "images": [
-        "/uploads/ef8a1284c16e4f3894a1bb17d9de3a08.jpg"
+        "https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/uploads/art-1783615046432-h1td8uz9455.jpg"
       ],
       "wechatLink": "https://store.weixin.qq.com/shop/a/VvExzatv7nMhePp"
     }
