@@ -204,14 +204,48 @@ tr:hover td{background:#fcfaf8}
 .upload-area:hover{border-color:var(--accent2);background:#faf8f5}
 .upload-area input{display:none}
 .upload-area img{max-height:120px;border-radius:6px;margin-top:8px}
-.image-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.upload-zone{
+  border:2px dashed var(--border);border-radius:10px;padding:36px 24px;text-align:center;
+  cursor:pointer;transition:all .3s;color:var(--text2);position:relative;
+  background:linear-gradient(135deg,rgba(255,255,255,0.4),rgba(255,255,255,0.1));
+}
+.upload-zone:hover,.upload-zone.dragover{
+  border-color:var(--accent2);background:rgba(139,111,78,0.04);
+  transform:scale(1.01)
+}
+.upload-zone .upload-icon{font-size:36px;margin-bottom:10px}
+.upload-zone .upload-text{font-size:14px;letter-spacing:1px;margin-bottom:6px}
+.upload-zone .upload-hint{font-size:11px;color:var(--text2);opacity:.7}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.upload-progress{margin-top:12px}
+.progress-bar{
+  width:100%;height:6px;background:var(--border);border-radius:3px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;width:0;background:linear-gradient(90deg,var(--accent2),var(--gold));
+  border-radius:3px;transition:width .3s ease;
+}
+.progress-text{font-size:11px;color:var(--text2);margin-top:6px;text-align:center;letter-spacing:1px}
+.image-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .image-list .img-item{position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden}
 .image-list .img-item img{width:100%;height:100%;object-fit:cover}
 .image-list .img-item .remove{
   position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;
-  background:rgba(0,0,0,.5);color:#fff;border:none;cursor:pointer;
+  background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;
   font-size:12px;display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
 }
+.image-list .img-item .remove:hover{background:var(--red)}
+.image-list .img-item.uploading{opacity:.5}
+.image-list .img-item .spinner{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.3);
+}
+.image-list .img-item .spinner::after{
+  content:'';width:20px;height:20px;border:2px solid #fff;border-top-color:transparent;
+  border-radius:50%;animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 .modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
 .modal-btns button{
   padding:10px 28px;border:none;border-radius:var(--radius-sm);
@@ -341,9 +375,22 @@ tr:hover td{background:#fcfaf8}
       <div class="form-group"><label>标签 (逗号分隔)</label><input id="f_tags" placeholder="风景, 人物"></div>
       <div class="form-group full"><label>作品描述</label><textarea id="f_description" placeholder="作品描述…" rows="3"></textarea></div>
       <div class="form-group full">
-        <label>图片URL</label>
-        <input id="f_imageUrl" placeholder="https://... 直接粘贴图片链接">
+        <label>作品图片</label>
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">拖拽图片到这里 或 点击选择文件</div>
+          <div class="upload-hint">支持 JPG / PNG / WebP / GIF，单文件不超过 5MB</div>
+          <input type="file" id="fileInput" multiple accept="image/*">
+        </div>
+        <div class="upload-progress" id="uploadProgress" style="display:none">
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="progress-text" id="progressText">上传中…</div>
+        </div>
         <div class="image-list" id="imagePreview"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+          <label style="font-size:11px;font-weight:600;color:var(--text2);letter-spacing:1px;margin-bottom:5px;display:block">或手动输入图片URL</label>
+          <input id="f_imageUrl" placeholder="https://... 直接粘贴图片链接">
+        </div>
       </div>
     </div>
     <div class="modal-btns">
@@ -359,6 +406,8 @@ tr:hover td{background:#fcfaf8}
    ============================================================= */
 const API_URL = 'https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/data.json';
 const GITHUB_API = 'https://api.github.com/repos/Gordon-yu-gh/art-gallery/contents/data.json';
+const GITHUB_UPLOAD = 'https://api.github.com/repos/Gordon-yu-gh/art-gallery/contents/uploads/';
+const GITHUB_RAW = 'https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/uploads/';
 const GITHUB_TOKEN = (function(s){var r='';for(var i=0;i<s.length;i++)r+=String.fromCharCode(s.charCodeAt(i)-1);return r;})('hiq`6Bq7ok{rymGcCyn9xdszJ6NI8BHJ[i59dfrT');
 const ADMIN_PWD = 'admin888';
 const SESSION_KEY = 'art_gallery_admin';
@@ -370,6 +419,7 @@ let siteConfig = {};
 let _githubSha = null;
 let editingId = -1;
 let toastTimer = null;
+let uploadedUrls = [];
 
 const $ = id => document.getElementById(id);
 
@@ -545,14 +595,18 @@ function openEdit(id){
   $('f_wechatLink').value = a?.wechatLink||'';
   $('f_tags').value = (a?.tags||[]).join(', ');
   $('f_description').value = a?.description||'';
-  $('f_imageUrl').value = a?.images?.[0]||a?.thumbnail||'';
+  $('f_imageUrl').value = '';
+  uploadedUrls = [...(a?.images||(a?.thumbnail?[a.thumbnail]:[]))];
   renderImagePreview();
+  hideUploadProgress();
   $('editModal').classList.add('active');
 }
 
 function closeModal(){
   $('editModal').classList.remove('active');
   editingId = -1;
+  uploadedUrls = [];
+  hideUploadProgress();
 }
 
 $('modalClose').addEventListener('click',closeModal);
@@ -562,8 +616,18 @@ $('editModal').addEventListener('click',e=>{if(e.target===$('editModal')) closeM
 $('modalSave').addEventListener('click',async ()=>{
   const title = $('f_title').value.trim();
   if(!title){toast('请输入作品名称','err');return}
-  
-  const imgUrl = $('f_imageUrl').value.trim();
+
+  var imgUrl = $('f_imageUrl').value.trim();
+  var images;
+  if(imgUrl){
+    uploadedUrls.push(imgUrl);
+    $('f_imageUrl').value = '';
+    renderImagePreview();
+  }
+  if(uploadedUrls.length>0){
+    images = [...uploadedUrls];
+  }
+
   const artwork = {
     id: editingId || Date.now(),
     title,
@@ -576,8 +640,8 @@ $('modalSave').addEventListener('click',async ()=>{
     wechatLink: $('f_wechatLink').value.trim(),
     tags: ($('f_tags').value||'').split(',').map(s=>s.trim()).filter(Boolean),
     description: $('f_description').value.trim(),
-    thumbnail: imgUrl,
-    images: imgUrl ? [imgUrl] : [],
+    thumbnail: images?.[0]||'',
+    images: images||[],
   };
 
   if(editingId){
@@ -607,11 +671,120 @@ function deleteArtwork(id){
 }
 
 function renderImagePreview(){
-  const url = $('f_imageUrl').value.trim();
-  $('imagePreview').innerHTML = url ? `<div class="img-item"><img src="${url}" alt=""></div>` : '';
+  if(uploadedUrls.length===0){$('imagePreview').innerHTML='';return}
+  $('imagePreview').innerHTML = uploadedUrls.map((url,i)=>`
+    <div class="img-item">
+      <img src="${url}" alt="">
+      <button class="remove" data-i="${i}">×</button>
+    </div>
+  `).join('');
+  $('imagePreview').querySelectorAll('.remove').forEach(btn=>{
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      const i = parseInt(this.dataset.i);
+      uploadedUrls.splice(i,1);
+      renderImagePreview();
+    });
+  });
 }
 
 $('f_imageUrl').addEventListener('input',renderImagePreview);
+$('f_imageUrl').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const url = this.value.trim();
+    if(url){uploadedUrls.push(url);this.value='';renderImagePreview()}
+  }
+});
+
+// ===== 图片上传 =====
+async function uploadImage(file){
+  return new Promise((resolve,reject)=>{
+    if(file.size > 5*1024*1024){reject(new Error('文件超过5MB'));return}
+    const reader = new FileReader();
+    reader.onload = function(){
+      const ext = (file.name.split('.').pop()||'jpg').toLowerCase();
+      const fname = 'art-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)+'.'+ext;
+      const b64 = reader.result.split(',')[1];
+      uploadToGitHub(fname,b64).then(url=>resolve(url)).catch(reject);
+    };
+    reader.onerror = ()=>reject(new Error('读取失败'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadToGitHub(filename,base64Content){
+  const path = 'uploads/' + filename;
+  const apiUrl = 'https://api.github.com/repos/Gordon-yu-gh/art-gallery/contents/' + path;
+  const body = JSON.stringify({
+    message: 'Upload image: ' + filename,
+    content: base64Content
+  });
+  const res = await fetch(apiUrl,{
+    method:'PUT',
+    headers:{Authorization:'token '+GITHUB_TOKEN,'Content-Type':'application/json'},
+    body: body
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.message||'上传失败: '+res.status);
+  }
+  return GITHUB_RAW + filename;
+}
+
+async function handleFiles(files){
+  const fileList = Array.from(files);
+  if(fileList.length===0) return;
+
+  $('uploadProgress').style.display='block';
+  $('progressFill').style.width='0';
+
+  var total=fileList.length,done=0,failed=0;
+  for(var i=0;i<fileList.length;i++){
+    $('progressText').textContent = '上传中 ' + (done+1) + '/' + total + '…';
+    try{
+      const url = await uploadImage(fileList[i]);
+      uploadedUrls.push(url);
+      done++;
+      $('progressFill').style.width = (done/total*100) + '%';
+      renderImagePreview();
+    }catch(e){
+      failed++;
+      console.warn('Upload failed:',e.message);
+    }
+  }
+
+  $('progressText').textContent = done+'/'+total+' 上传成功'+(failed>0?'，'+failed+' 个失败':'');
+  setTimeout(()=>hideUploadProgress(),2500);
+}
+
+function hideUploadProgress(){
+  $('uploadProgress').style.display='none';
+  $('progressFill').style.width='0';
+}
+
+// 拖拽事件
+const uploadZone = $('uploadZone');
+['dragenter','dragover','dragleave','drop'].forEach(ev=>{
+  uploadZone.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation()});
+});
+['dragenter','dragover'].forEach(ev=>{
+  uploadZone.addEventListener(ev,function(){this.classList.add('dragover')});
+});
+['dragleave','drop'].forEach(ev=>{
+  uploadZone.addEventListener(ev,function(){this.classList.remove('dragover')});
+});
+uploadZone.addEventListener('drop',function(e){
+  if(e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+});
+
+// 点击选择文件
+$('fileInput').addEventListener('change',function(){
+  if(this.files.length){handleFiles(this.files);this.value=''}
+});
+
+// 点击上传区域 = 触发文件选择
+uploadZone.addEventListener('click',function(e){if(e.target.tagName!=='INPUT') $('fileInput').click()});
 
 /* =============================================================
    Settings
