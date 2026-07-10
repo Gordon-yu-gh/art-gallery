@@ -313,6 +313,19 @@ tr:hover td{background:#fcfaf8}
     </div>
   </div>
 
+  <!-- Status Panel -->
+  <div id="statusPanel" style="display:none;background:var(--card);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;line-height:1.8;box-shadow:var(--shadow)">
+    <div style="display:flex;gap:32px;flex-wrap:wrap">
+      <span>数据源: <b id="stSource">—</b></span>
+      <span>API状态: <b id="stApi">—</b></span>
+      <span>作品: <b id="stWorks">—</b></span>
+      <span>回收站: <b id="stTrash">—</b></span>
+      <span>Token状态: <b id="stToken">—</b></span>
+      <span>本地备份: <b id="stLocal">—</b></span>
+    </div>
+    <div id="stDetail" style="color:var(--text2);margin-top:4px"></div>
+  </div>
+
   <div class="tabs">
     <button class="active" data-tab="dashboard">仪表盘</button>
       <button data-tab="artworks">作品管理</button>
@@ -494,9 +507,12 @@ async function loadData(){
       if(data.deletedArtworks) deletedArtworks = data.deletedArtworks;
       _githubSha = apiData.sha;
       $('syncStatus').textContent = '已同步云端数据 | ' + artworks.length + ' 件作品 | 回收站 ' + deletedArtworks.length + ' 件';
+      updateStatusPanel('github-api', true, '');
       return true;
+    }else{
+      updateStatusPanel('github-api', false, 'HTTP '+r.status);
     }
-  }catch(e){console.warn('API fetch:',e)}
+  }catch(e){console.warn('API fetch:',e); updateStatusPanel('github-api', false, e.message);}
   // Fallback: raw CDN
   try{
     const r = await fetch(API_URL,{cache:'no-cache'});
@@ -504,11 +520,14 @@ async function loadData(){
       const data = await r.json();
       if(data.siteConfig) siteConfig = data.siteConfig;
       if(data.artworks) artworks = data.artworks;
+      if(data.deletedArtworks) deletedArtworks = data.deletedArtworks;
       $('syncStatus').textContent = '来源CDN缓存 | ' + artworks.length + ' 件作品';
+      updateStatusPanel('cdn', true, '');
       return true;
     }
-  }catch(e2){console.warn('CDN fetch:',e2)}
+  }catch(e2){console.warn('CDN fetch:',e2); updateStatusPanel('cdn', false, e2.message);}
   $('syncStatus').textContent = '离线模式 | ' + artworks.length + ' 件作品';
+  updateStatusPanel('offline', false, '');
   return false;
 }
 
@@ -518,6 +537,7 @@ async function saveData(){
   // Always cache locally as backup
   localStorage.setItem('admin_local_backup', JSON.stringify(data));
   localStorage.setItem('admin_backup_ts', Date.now());
+  $('stLocal').textContent = '刚刚';
   return _doSave(data);
 }
 
@@ -529,6 +549,7 @@ async function _doSave(data){
       else{
         if(metaRes.status===401||metaRes.status===403){
           $('syncStatus').textContent = '🔴 Token 无效或已过期，请更新 Token';
+          $('stToken').innerHTML = '<span style="color:var(--red)">已过期/无效</span>';
           toast('Token 已过期，数据仅保存到本地','err');
           return false;
         }
@@ -551,6 +572,7 @@ async function _doSave(data){
       const putData = await putRes.json();
       _githubSha = putData.content ? putData.content.sha : null;
       $('syncStatus').textContent = '🟢 已保存并同步云端';
+      updateStatusPanel('github-api', true, '已保存');
       return true;
     }else if(putRes.status===409){
       _saveRetries++;
@@ -567,6 +589,7 @@ async function _doSave(data){
       return _doSave(data);
     }else if(putRes.status===401||putRes.status===403){
       $('syncStatus').textContent = '🔴 Token 无效，无法同步';
+      $('stToken').innerHTML = '<span style="color:var(--red)">已过期/无效</span>';
       toast('Token 已过期，数据仅保存到本地','err');
       return false;
     }else if(putRes.status===429){
@@ -587,6 +610,23 @@ async function _doSave(data){
 }
 
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function updateStatusPanel(source, ok, detail){
+  $('statusPanel').style.display='block';
+  $('stSource').textContent = source==='github-api'?'GitHub API':source==='cdn'?'CDN缓存':'离线';
+  $('stApi').innerHTML = ok?'<span style="color:var(--green)">✓ 正常</span>':'<span style="color:var(--red)">✗ 失败</span>';
+  $('stDetail').textContent = detail;
+  const ts = localStorage.getItem('admin_backup_ts');
+  if(ts){
+    const ago = Math.floor((Date.now()-parseInt(ts))/60000);
+    $('stLocal').textContent = ago<1?'刚刚':'约'+ago+'分钟前';
+  }else{
+    $('stLocal').textContent = '无';
+  }
+  $('stWorks').textContent = artworks.length+' 件';
+  $('stTrash').textContent = deletedArtworks.length+' 件';
+  $('stToken').innerHTML = (ok || source!=='github-api')?'—':'<span style="color:var(--red)">可能已过期</span>';
+}
 
 /* =============================================================
    Dashboard
