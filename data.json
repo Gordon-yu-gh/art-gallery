@@ -26,7 +26,7 @@
   },
   "artworks": [
     {
-      "id": "",
+      "id": 1,
       "title": "暮色山峦",
       "artist": "林溪",
       "description": "油画布面作品，描绘黄昏时分群山层叠的静谧之美。暖色调与冷色调的交织呈现出时间流逝的诗意。",
@@ -45,7 +45,7 @@
       "wechatLink": "https://xhslink.com/m/1xnFbXK9HdF"
     },
     {
-      "id": "",
+      "id": 2,
       "title": "城市呼吸",
       "artist": "陈微",
       "description": "抽象丙烯画，以大胆的笔触和丰富的色彩表达都市的律动与生命力。",
@@ -220,5 +220,6 @@
       ],
       "wechatLink": "https://xhslink.com/m/1xnFbXK9HdF"
     }
-  ]
+  ],
+  "deletedArtworks": []
 }

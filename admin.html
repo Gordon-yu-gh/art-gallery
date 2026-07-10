@@ -315,8 +315,9 @@ tr:hover td{background:#fcfaf8}
 
   <div class="tabs">
     <button class="active" data-tab="dashboard">仪表盘</button>
-    <button data-tab="artworks">作品管理</button>
-    <button data-tab="settings">网站设置</button>
+      <button data-tab="artworks">作品管理</button>
+      <button data-tab="trash">回收站</button>
+      <button data-tab="settings">网站设置</button>
   </div>
 
   <!-- Dashboard -->
@@ -351,6 +352,24 @@ tr:hover td{background:#fcfaf8}
     <div class="settings-form" id="settingsForm"></div>
     <div class="settings-actions">
       <button class="btn-save" id="saveSettings">保存设置</button>
+    </div>
+  </div>
+
+  <!-- Trash -->
+  <div class="tab-panel" id="panel-trash">
+    <div class="toolbar">
+      <span style="font-size:13px;color:var(--text2);letter-spacing:1px" id="trashCount">回收站：0 件</span>
+      <button class="add-btn" id="emptyTrashBtn" style="background:var(--red);margin-left:auto">清空回收站</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>图片</th><th>名称</th><th>艺术家</th><th>风格</th><th>价格</th><th>删除时间</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="trashTable"></tbody>
+      </table>
     </div>
   </div>
 </div>
@@ -412,9 +431,10 @@ const GITHUB_TOKEN = (function(s){var r='';for(var i=0;i<s.length;i++)r+=String.
 const ADMIN_PWD = 'admin888';
 const SESSION_KEY = 'art_gallery_admin';
 
-const EMBEDDED_DATA = {"siteConfig":{"siteName":"林溪作品","subtitle":"发现与收藏你喜爱的艺术作品","tagline":"— 画 廊 —","aboutTitle":"关于画廊","aboutContent":"欢迎来到林溪作品画廊。","footerText":"© 林溪作品 — 发现与收藏美好","logo":"","favicon":"","buyBtnText":"小红书购买","colors":{"bg":"#faf7f2","card":"#ffffff","text":"#1a1410","text2":"#7a6e5c","border":"#e8e0d4","accent":"#5c3d2e","accent2":"#8b6f4e","warm":"#d4b896","gold":"#c9a96e"}},"artworks":[]};
+const EMBEDDED_DATA = {"siteConfig":{"siteName":"林溪作品","subtitle":"发现与收藏你喜爱的艺术作品","tagline":"— 画 廊 —","aboutTitle":"关于画廊","aboutContent":"欢迎来到林溪作品画廊。","footerText":"© 林溪作品 — 发现与收藏美好","logo":"","favicon":"","buyBtnText":"小红书购买","colors":{"bg":"#faf7f2","card":"#ffffff","text":"#1a1410","text2":"#7a6e5c","border":"#e8e0d4","accent":"#5c3d2e","accent2":"#8b6f4e","warm":"#d4b896","gold":"#c9a96e"}},"artworks":[],"deletedArtworks":[]};
 
 let artworks = [];
+let deletedArtworks = [];
 let siteConfig = {};
 let _githubSha = null;
 let _saveRetries = 0;
@@ -471,8 +491,9 @@ async function loadData(){
       const data = JSON.parse(jsonStr);
       if(data.siteConfig) siteConfig = data.siteConfig;
       if(data.artworks) artworks = data.artworks;
+      if(data.deletedArtworks) deletedArtworks = data.deletedArtworks;
       _githubSha = apiData.sha;
-      $('syncStatus').textContent = '已同步云端数据 | ' + artworks.length + ' 件作品';
+      $('syncStatus').textContent = '已同步云端数据 | ' + artworks.length + ' 件作品 | 回收站 ' + deletedArtworks.length + ' 件';
       return true;
     }
   }catch(e){console.warn('API fetch:',e)}
@@ -492,7 +513,7 @@ async function loadData(){
 }
 
 async function saveData(){
-  const data = {siteConfig, artworks};
+  const data = {siteConfig, artworks, deletedArtworks};
   _saveRetries = 0;
   // Always cache locally as backup
   localStorage.setItem('admin_local_backup', JSON.stringify(data));
@@ -577,6 +598,7 @@ function renderDashboard(){
   if(_chartTimer){clearTimeout(_chartTimer);_chartTimer=null}
 
   const works = artworks.length;
+  const deleted = deletedArtworks.length;
   const artists = new Set(artworks.map(a=>a.artist).filter(Boolean)).size;
   const styles = new Set(artworks.map(a=>a.style).filter(Boolean)).size;
   const prices = artworks.map(a=>a.price||0).filter(p=>p>0);
@@ -588,6 +610,7 @@ function renderDashboard(){
     <div class="dash-card green"><div class="dash-number" data-target="${artists}">0</div><div class="dash-label">艺术家</div></div>
     <div class="dash-card gold"><div class="dash-number" data-target="${styles}">0</div><div class="dash-label">风格类型</div></div>
     <div class="dash-card red"><div class="dash-number" data-target="${avg}">0</div><div class="dash-label">均价 ¥</div></div>
+    <div class="dash-card" style="border-left-color:#aaa"><div class="dash-number" data-target="${deleted}">0</div><div class="dash-label">回收站</div></div>
   `;
 
   // Animate
@@ -737,22 +760,111 @@ $('modalSave').addEventListener('click',async ()=>{
 });
 
 function deleteArtwork(id){
-  if(!confirm('确定要删除「'+(artworks[findIdx(id)]?.title||'')+'？」')) return;
   const idx = findIdx(id);
   if(idx<0){toast('作品不存在','err');return}
   const removed = artworks.splice(idx,1)[0];
+  removed.deletedAt = new Date().toISOString();
+  deletedArtworks.push(removed);
 
-  // Optimistic: update UI immediately
   renderArtworkTable($('listSearch').value);
   renderDashboard();
 
   saveData().then(success=>{
     if(success){
-      toast('已删除','ok');
+      toast('已移至回收站','ok');
     }else{
-      // Rollback on failure
+      deletedArtworks.pop();
       artworks.splice(idx,0,removed);
+      delete removed.deletedAt;
       renderArtworkTable($('listSearch').value);
+      renderDashboard();
+      toast('同步失败，已恢复','err');
+    }
+  });
+}
+
+/* =============================================================
+   Trash / 回收站
+   ============================================================= */
+function renderTrashTable(){
+  const tbody = $('trashTable');
+  if(deletedArtworks.length===0){
+    tbody.innerHTML = '<tr class="empty-table"><td colspan="7">回收站为空</td></tr>';
+    $('trashCount').textContent = '回收站：0 件';
+    return;
+  }
+  $('trashCount').textContent = '回收站：' + deletedArtworks.length + ' 件';
+  tbody.innerHTML = deletedArtworks.map(a=>`
+    <tr>
+      <td><img class="thumb-cell" src="${a.thumbnail||a.images?.[0]||''}" alt="" loading="lazy" onerror="this.style.display='none'"></td>
+      <td>${a.title||'—'}</td>
+      <td>${a.artist||'—'}</td>
+      <td>${a.style||'—'}</td>
+      <td>¥${a.price||0}</td>
+      <td>${a.deletedAt?new Date(a.deletedAt).toLocaleString('zh-CN'):'—'}</td>
+      <td class="actions-cell">
+        <button class="edit" onclick="restoreArtwork('${a.id}')">恢复</button>
+        <button class="del" onclick="permanentDelete('${a.id}')">彻底删除</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function restoreArtwork(id){
+  const idx = deletedArtworks.findIndex(a=>String(a.id)===String(id));
+  if(idx<0){toast('未找到该作品','err');return}
+  const restored = deletedArtworks.splice(idx,1)[0];
+  delete restored.deletedAt;
+  artworks.push(restored);
+  renderTrashTable();
+  renderArtworkTable($('listSearch').value);
+  renderDashboard();
+  saveData().then(success=>{
+    if(success){
+      toast('已恢复','ok');
+    }else{
+      artworks.pop();
+      deletedArtworks.splice(idx,0,restored);
+      renderTrashTable();
+      renderArtworkTable($('listSearch').value);
+      renderDashboard();
+      toast('同步失败，已撤销','err');
+    }
+  });
+}
+
+function permanentDelete(id){
+  const idx = deletedArtworks.findIndex(a=>String(a.id)===String(id));
+  if(idx<0){toast('未找到该作品','err');return}
+  if(!confirm('彻底删除「'+(deletedArtworks[idx]?.title||'')+'」后将无法恢复，确定？')) return;
+  const removed = deletedArtworks.splice(idx,1)[0];
+  renderTrashTable();
+  renderDashboard();
+  saveData().then(success=>{
+    if(success){
+      toast('已彻底删除','ok');
+    }else{
+      deletedArtworks.splice(idx,0,removed);
+      renderTrashTable();
+      renderDashboard();
+      toast('同步失败，已恢复','err');
+    }
+  });
+}
+
+function emptyTrash(){
+  if(deletedArtworks.length===0){toast('回收站已空','err');return}
+  if(!confirm('确定清空回收站？所有 '+deletedArtworks.length+' 件作品将无法恢复！')) return;
+  const backup = [...deletedArtworks];
+  deletedArtworks = [];
+  renderTrashTable();
+  renderDashboard();
+  saveData().then(success=>{
+    if(success){
+      toast('回收站已清空','ok');
+    }else{
+      deletedArtworks = backup;
+      renderTrashTable();
       renderDashboard();
       toast('同步失败，已恢复','err');
     }
@@ -949,7 +1061,7 @@ $('saveSettings').addEventListener('click',async ()=>{
    Import/Export
    ============================================================= */
 $('exportBtn').addEventListener('click',()=>{
-  const data = {siteConfig,artworks,exportedAt:new Date().toISOString()};
+  const data = {siteConfig,artworks,deletedArtworks,exportedAt:new Date().toISOString()};
   const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -969,6 +1081,7 @@ $('importInput').addEventListener('change',async function(e){
       const data = JSON.parse(ev.target.result);
       if(data.artworks) artworks = data.artworks;
       if(data.siteConfig) siteConfig = data.siteConfig;
+      if(data.deletedArtworks) deletedArtworks = data.deletedArtworks;
       if(await saveData()){
         toast('数据已恢复 ('+artworks.length+' 件作品)','ok');
         refreshAll();
@@ -989,6 +1102,7 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
     document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
     $('panel-'+this.dataset.tab).classList.add('active');
     if(this.dataset.tab==='settings') renderSettings();
+    if(this.dataset.tab==='trash') renderTrashTable();
     if(this.dataset.tab==='dashboard') renderDashboard();
   });
 });
@@ -998,10 +1112,12 @@ document.querySelectorAll('.tabs button').forEach(btn=>{
    ============================================================= */
 $('listSearch').addEventListener('input',function(){renderArtworkTable(this.value)});
 $('addBtn').addEventListener('click',()=>openEdit(0));
+$('emptyTrashBtn').addEventListener('click',emptyTrash);
 
 function refreshAll(){
   renderDashboard();
   renderArtworkTable($('listSearch').value);
+  renderTrashTable();
   renderSettings();
 }
 
@@ -1015,6 +1131,7 @@ async function showApp(){
   if(EMBEDDED_DATA && EMBEDDED_DATA.siteConfig) siteConfig = EMBEDDED_DATA.siteConfig;
   await loadData();
   if(!artworks.length && EMBEDDED_DATA.artworks) artworks = EMBEDDED_DATA.artworks;
+  if(!deletedArtworks.length && EMBEDDED_DATA.deletedArtworks) deletedArtworks = EMBEDDED_DATA.deletedArtworks;
   renderDashboard();
   renderArtworkTable();
 }
