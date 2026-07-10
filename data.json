@@ -219,26 +219,6 @@
         "https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=1200&fit=crop"
       ],
       "wechatLink": "https://xhslink.com/m/1xnFbXK9HdF"
-    },
-    {
-      "id": 13,
-      "title": "于旷野中孤独",
-      "artist": "一条鱼",
-      "description": "作品构图比较简洁，着重大面积铺色，内容描述着寂静的画面，浓郁又明亮的色彩搭配却热情奔放，充满视觉冲击力",
-      "price": 200,
-      "style": "油画",
-      "tags": [
-        "抽象主义",
-        "表现主义"
-      ],
-      "year": 2026,
-      "size": "60x80cm",
-      "material": "油画",
-      "thumbnail": "https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/uploads/art-1783615046432-h1td8uz9455.jpg",
-      "images": [
-        "https://raw.githubusercontent.com/Gordon-yu-gh/art-gallery/main/uploads/art-1783615046432-h1td8uz9455.jpg"
-      ],
-      "wechatLink": "https://store.weixin.qq.com/shop/a/VvExzatv7nMhePp"
     }
   ]
 }
