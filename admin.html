@@ -708,10 +708,10 @@ function renderArtworkTable(filter=''){
       <td>¥${a.price||0}</td>
       <td>${a.size||'—'}</td>
       <td>${a.year||'—'}</td>
-      <td class="actions-cell">
+      <td><div class="actions-cell">
         <button class="edit" onclick="openEdit(${a.id})">编辑</button>
         <button class="del" onclick="deleteArtwork(${a.id})">删除</button>
-      </td>
+      </div></td>
     </tr>
   `).join('');
 }
@@ -844,10 +844,10 @@ function renderTrashTable(){
       <td>${a.style||'—'}</td>
       <td>¥${a.price||0}</td>
       <td>${a.deletedAt?new Date(a.deletedAt).toLocaleString('zh-CN'):'—'}</td>
-      <td class="actions-cell">
+      <td><div class="actions-cell">
         <button class="edit" onclick="restoreArtwork('${a.id}')">恢复</button>
         <button class="del" onclick="permanentDelete('${a.id}')">彻底删除</button>
-      </td>
+      </div></td>
     </tr>
   `).join('');
 }
