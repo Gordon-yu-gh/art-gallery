@@ -223,6 +223,45 @@ body{
   text-decoration:none;align-self:flex-start;
 }
 .detail-buy:hover{background:#4a3020}
+.detail-buy.wx{background:var(--gold)}
+.detail-buy.wx:hover{background:#b8995e}
+.detail-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:4px}
+.card-fav{
+  position:absolute;top:10px;right:10px;z-index:5;
+  width:34px;height:34px;border-radius:50%;border:none;
+  background:rgba(0,0,0,0.25);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all var(--transition);padding:0;
+}
+.card-fav:hover{background:rgba(0,0,0,0.4);transform:scale(1.1)}
+.card-fav svg{width:18px;height:18px;transition:all .3s}
+.card-fav svg path{stroke:#fff;stroke-width:2;fill:none;transition:all .3s}
+.card-fav.active{background:rgba(231,76,60,0.7)}
+.card-fav.active svg path{fill:#fff;stroke:#fff}
+.card-fav:active{transform:scale(0.9)}
+.fav-btn{
+  display:inline-flex;align-items:center;gap:6px;padding:11px 20px;
+  border:1.5px solid var(--accent2);border-radius:var(--radius-sm);
+  background:transparent;color:var(--accent2);font-size:13px;
+  cursor:pointer;letter-spacing:1px;font-family:inherit;
+  transition:all var(--transition);
+}
+.fav-btn:hover{background:var(--accent2);color:#fff}
+.fav-btn.active{background:rgba(231,76,60,0.08);border-color:#e74c3c;color:#e74c3c}
+.fav-btn.active svg path{fill:#e74c3c;stroke:#e74c3c}
+.fav-btn svg{width:16px;height:16px}
+.fav-btn svg path{stroke:currentColor;stroke-width:2;fill:none;transition:all .3s}
+.fav-btn.active:hover{background:rgba(231,76,60,0.15)}
+.fav-filter-btn{
+  padding:8px 18px;border:1.5px solid var(--border);border-radius:24px;
+  background:var(--card);color:var(--text2);font-size:12px;cursor:pointer;
+  letter-spacing:1px;font-family:inherit;white-space:nowrap;
+  transition:all var(--transition);
+}
+.fav-filter-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.fav-filter-btn.active{background:rgba(231,76,60,0.08);border-color:#e74c3c;color:#e74c3c}
+.fav-filter-btn.active .fav-count{background:#e74c3c;color:#fff}
+.fav-count{display:inline-block;min-width:18px;height:18px;line-height:18px;padding:0 4px;border-radius:9px;background:var(--border);color:var(--text2);font-size:10px;text-align:center;margin-left:2px;transition:all var(--transition)}
 .detail-close{
   position:absolute;top:12px;right:16px;z-index:10;
   width:36px;height:36px;border-radius:50%;border:none;
@@ -415,6 +454,7 @@ body{
   <span class="price-label">—</span>
   <input type="number" class="price-input" id="priceMax" placeholder="最高价">
   <button class="reset-btn" id="resetBtn">重置</button>
+  <button class="fav-filter-btn" id="favFilterBtn" onclick="toggleFavFilter()">收藏<span class="fav-count" id="favCount">0</span></button>
 </div>
 
 <!-- 结果计数 -->
@@ -497,6 +537,8 @@ let artworks = [];
 let siteConfig = {};
 let currentDetailIdx = -1;
 let filteredArtworks = [];
+let favorites = JSON.parse(localStorage.getItem('art_gallery_fav')||'[]');
+let favFilterOn = false;
 let toastTimer = null;
 let _githubSha = null;
 
@@ -644,11 +686,46 @@ function updateUI(){
   if($('gallery').children.length>0){
     applyConfig();
     buildFilterOptions();
+    updateFavUI();
     filterArtworks();
     renderGallery();
     animateNumbers();
     observeScrollReveal();
   }
+}
+
+/* =============================================================
+   收藏功能
+   ============================================================= */
+function isFavorited(id){return favorites.includes(id)}
+
+function toggleFav(id){
+  const idx = favorites.indexOf(id);
+  if(idx>=0){favorites.splice(idx,1)}else{favorites.push(id)}
+  localStorage.setItem('art_gallery_fav',JSON.stringify(favorites));
+  updateFavUI();
+  filterArtworks();
+  renderGallery();
+  if($('detailOverlay').classList.contains('active') && currentDetailIdx>=0){
+    const a = artworks[currentDetailIdx];
+    const btn = $('detailFavBtn');
+    if(btn){
+      if(isFavorited(a.id)){btn.classList.add('active')}else{btn.classList.remove('active')}
+    }
+  }
+}
+
+function updateFavUI(){
+  $('favCount').textContent = favorites.length;
+  var btn = $('favFilterBtn');
+  if(favFilterOn){btn.classList.add('active')}else{btn.classList.remove('active')}
+}
+
+function toggleFavFilter(){
+  favFilterOn = !favFilterOn;
+  updateFavUI();
+  filterArtworks();
+  renderGallery();
 }
 
 /* =============================================================
@@ -699,6 +776,7 @@ function filterArtworks(){
   const pMax = parseFloat($('priceMax').value)||Infinity;
 
   filteredArtworks = artworks.filter(a=>{
+    if(favFilterOn && !favorites.includes(a.id)) return false;
     if(search && !(a.title||'').toLowerCase().includes(search) && !(a.artist||'').toLowerCase().includes(search) && !(a.style||'').toLowerCase().includes(search)) return false;
     if(style && a.style !== style) return false;
     if(artist && a.artist !== artist) return false;
@@ -714,14 +792,18 @@ function filterArtworks(){
 
 function renderGallery(){
   const grid = $('gallery');
-  const buyText = siteConfig.buyBtnText || '小红书购买';
   
   grid.innerHTML = filteredArtworks.map((a,i)=>{
     const origIdx = artworks.indexOf(a);
+    const fid = a.id;
+    const fav = isFavorited(fid);
     return `
     <div class="card reveal" data-idx="${origIdx}" style="--mx:50%;--my:50%" onmousemove="cardMouseMove(event,this)" onmouseleave="cardMouseLeave(this)" ontouchmove="cardTouchMove(event,this)" ontouchend="cardTouchEnd(this)" onclick="openDetail(${origIdx})">
       <div class="card-img-wrap">
         <img class="card-img" src="${a.thumbnail||a.images?.[0]||''}" alt="${a.title}" loading="lazy" onload="this.style.opacity=1" style="opacity:0;transition:opacity .5s">
+        <button class="card-fav${fav?' active':''}" onclick="event.stopPropagation();toggleFav(${fid})" title="收藏">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
       </div>
       <div class="card-body">
         <div class="card-meta">${a.artist||''} <span class="dot"></span> ${a.year||''}</div>
@@ -734,7 +816,6 @@ function renderGallery(){
     </div>`
   }).join('');
 
-  // re-apply reveal observers
   observeScrollReveal();
 }
 
@@ -785,6 +866,9 @@ function openDetail(idx){
   const a = artworks[idx];
   const buyText = siteConfig.buyBtnText || '小红书购买';
   const buyLink = a.wechatLink || '#';
+  const wxLink = a.wxLink || '#';
+  const fid = a.id;
+  const fav = isFavorited(fid);
 
   $('detailCard').innerHTML = `
     <img class="detail-img" src="${a.images?.[0]||a.thumbnail||''}" alt="${a.title}">
@@ -798,7 +882,14 @@ function openDetail(idx){
       </div>
       <div class="detail-price">${a.price||0}</div>
       <p class="detail-desc">${a.description||''}</p>
-      <a class="detail-buy" href="${buyLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${buyText}</a>
+      <div class="detail-actions">
+        <a class="detail-buy" href="${buyLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${buyText}</a>
+        <a class="detail-buy wx" href="${wxLink}" target="_blank" rel="noopener" onclick="event.stopPropagation()">微信购买</a>
+        <button class="fav-btn${fav?' active':''}" id="detailFavBtn" onclick="event.stopPropagation();toggleFav(${fid})">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          收藏
+        </button>
+      </div>
     </div>`;
 
   $('detailOverlay').classList.add('active');
@@ -923,6 +1014,8 @@ $('resetBtn').addEventListener('click',()=>{
   $('artistFilter').value = '';
   $('priceMin').value = '';
   $('priceMax').value = '';
+  favFilterOn = false;
+  updateFavUI();
   filterArtworks();
   renderGallery();
 });
