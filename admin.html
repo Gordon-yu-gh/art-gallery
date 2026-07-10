@@ -461,16 +461,32 @@ $('logoutBtn').addEventListener('click',()=>{sessionStorage.removeItem(SESSION_K
    Data
    ============================================================= */
 async function loadData(){
+  // Primary: GitHub API (direct, instant, no CDN cache)
+  try{
+    const r = await fetch(GITHUB_API,{cache:'no-cache',headers:{Authorization:'token '+GITHUB_TOKEN}});
+    if(r.ok){
+      const apiData = await r.json();
+      const b64 = apiData.content.replace(/\s/g,'');
+      const jsonStr = decodeURIComponent(escape(atob(b64)));
+      const data = JSON.parse(jsonStr);
+      if(data.siteConfig) siteConfig = data.siteConfig;
+      if(data.artworks) artworks = data.artworks;
+      _githubSha = apiData.sha;
+      $('syncStatus').textContent = '已同步云端数据 | ' + artworks.length + ' 件作品';
+      return true;
+    }
+  }catch(e){console.warn('API fetch:',e)}
+  // Fallback: raw CDN
   try{
     const r = await fetch(API_URL,{cache:'no-cache'});
     if(r.ok){
       const data = await r.json();
       if(data.siteConfig) siteConfig = data.siteConfig;
       if(data.artworks) artworks = data.artworks;
-      $('syncStatus').textContent = '已同步云端数据 | ' + artworks.length + ' 件作品';
+      $('syncStatus').textContent = '来源CDN缓存 | ' + artworks.length + ' 件作品';
       return true;
     }
-  }catch(e){console.warn(e)}
+  }catch(e2){console.warn('CDN fetch:',e2)}
   $('syncStatus').textContent = '离线模式 | ' + artworks.length + ' 件作品';
   return false;
 }
@@ -478,6 +494,9 @@ async function loadData(){
 async function saveData(){
   const data = {siteConfig, artworks};
   _saveRetries = 0;
+  // Always cache locally as backup
+  localStorage.setItem('admin_local_backup', JSON.stringify(data));
+  localStorage.setItem('admin_backup_ts', Date.now());
   return _doSave(data);
 }
 
@@ -488,11 +507,16 @@ async function _doSave(data){
       if(metaRes.ok){const meta=await metaRes.json();_githubSha = meta.sha}
       else{
         if(metaRes.status===401||metaRes.status===403){
-          $('syncStatus').textContent = '⚠️ Token 无效或已过期，请更新 Token';
-          toast('Token 已过期，无法同步','err');
-          throw new Error('Token expired');
+          $('syncStatus').textContent = '🔴 Token 无效或已过期，请更新 Token';
+          toast('Token 已过期，数据仅保存到本地','err');
+          return false;
         }
-        if(metaRes.status===429){throw new Error('API rate limit exceeded')}
+        if(metaRes.status===429){
+          $('syncStatus').textContent = '🟡 请求频繁，3秒后自动重试';
+          await sleep(3000);
+          _githubSha = null;
+          return _doSave(data);
+        }
         throw new Error('Failed to get SHA: '+metaRes.status);
       }
     }
@@ -516,15 +540,19 @@ async function _doSave(data){
         return false;
       }
       _githubSha = null;
+      $('syncStatus').textContent = '🟡 正在重试同步 (' + _saveRetries + '/3)';
+      // Wait 1-2s before retry to let concurrent operation finish
+      await sleep(1000 + Math.random() * 1000);
       return _doSave(data);
     }else if(putRes.status===401||putRes.status===403){
       $('syncStatus').textContent = '🔴 Token 无效，无法同步';
       toast('Token 已过期，数据仅保存到本地','err');
       return false;
     }else if(putRes.status===429){
-      $('syncStatus').textContent = '🟡 请求频繁，下次操作会自动重试';
-      toast('请求过于频繁，稍后重试','err');
-      return false;
+      $('syncStatus').textContent = '🟡 请求频繁，3秒后自动重试';
+      await sleep(3000);
+      _githubSha = null;
+      return _doSave(data);
     }else{
       throw new Error('Save failed: '+putRes.status);
     }
@@ -536,6 +564,8 @@ async function _doSave(data){
   }
   return false;
 }
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
 /* =============================================================
    Dashboard
