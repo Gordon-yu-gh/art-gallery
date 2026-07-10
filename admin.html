@@ -105,11 +105,13 @@ body{
 
 /* Artwork list */
 .table-wrap{background:var(--card);border-radius:var(--radius);overflow-x:auto;box-shadow:var(--shadow);margin-bottom:24px}
-table{width:100%;border-collapse:collapse;min-width:800px}
+table{width:100%;border-collapse:collapse;min-width:800px;table-layout:fixed}
 th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border);font-size:13px}
 th{background:#faf8f5;font-weight:600;color:var(--text2);font-size:11px;letter-spacing:1.5px;white-space:nowrap}
 tr:hover td{background:#fcfaf8}
 .thumb-cell{width:52px;height:52px;border-radius:6px;object-fit:cover;background:var(--border)}
+th:first-child,td:first-child{width:68px}
+th:last-child,td:last-child{width:130px}
 .actions-cell{display:flex;gap:6px}
 .actions-cell button{
   padding:4px 12px;border:1px solid var(--border);border-radius:6px;
