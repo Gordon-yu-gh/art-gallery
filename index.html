@@ -351,6 +351,7 @@ body{
   
   /* 手机端卡片触控倾斜 */
   .card.tilting{transition:transform .1s linear}
+  .card{touch-action:pan-y}
 }
 
 @media(max-width:400px){
@@ -759,18 +760,13 @@ function cardMouseLeave(card){
 }
 
 function cardTouchMove(e, card){
-  e.preventDefault();
   const touch = e.touches[0];
   const rect = card.getBoundingClientRect();
   const x = touch.clientX - rect.left;
   const y = touch.clientY - rect.top;
-  const cx = rect.width / 2, cy = rect.height / 2;
-  const rx = (y - cy) / cy * -4;
-  const ry = (x - cx) / cx * 4;
-  card.classList.add('tilting','touch-active');
+  card.classList.add('touch-active');
   card.style.setProperty('--mx', x + 'px');
   card.style.setProperty('--my', y + 'px');
-  card.style.transform = `perspective(600px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02,1.02,1.02)`;
 }
 
 function cardTouchEnd(card){
